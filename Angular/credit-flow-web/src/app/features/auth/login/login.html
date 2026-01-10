@@ -1,0 +1,62 @@
+<div class="flex justify-content-center align-items-center min-h-screen bg-blue-50">
+  
+  <p-card header="Welcome Back" subheader="Sign in to continue to CreditFlow" [style]="{ width: '400px' }">
+    
+@if (errorMessage()) {
+    <div class="mb-3">
+        <p-message severity="error" icon="pi pi-times-circle" styleClass="w-full justify-content-start">
+            {{ errorMessage() }}
+        </p-message>
+    </div>
+}
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      
+      <div class="field mb-4">
+        <label for="email" class="block text-900 font-medium mb-2">Email</label>
+        <input 
+          id="email" 
+          type="text" 
+          pInputText 
+          formControlName="email" 
+          class="w-full" 
+          placeholder="email@example.com"
+        />
+        @if (loginForm.get('email')?.dirty && loginForm.get('email')?.invalid) {
+          <small class="p-error block">
+            Please enter a valid email address.
+          </small>
+        }
+      </div>
+
+      <div class="field mb-4">
+        <label for="password" class="block text-900 font-medium mb-2">Password</label>
+        <p-password 
+          id="password" 
+          formControlName="password" 
+          [toggleMask]="true" 
+          [feedback]="false"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          placeholder="Password"
+        ></p-password>
+      </div>
+
+      <div class="flex flex-column gap-3">
+        <p-button 
+          label="Sign In" 
+          type="submit" 
+          [loading]="isLoading()" 
+          styleClass="w-full"
+          [disabled]="loginForm.invalid">
+        </p-button>
+
+        <div class="text-center mt-2">
+          <span class="text-600">Don't have an account? </span>
+          <a routerLink="/auth/register" class="font-bold text-primary no-underline cursor-pointer">Register</a>
+        </div>
+      </div>
+
+    </form>
+  </p-card>
+</div>

@@ -1,6 +1,8 @@
-﻿using CreditFlowAPI.Feature.Loans.Commands;
+﻿using CreditFlowAPI.Domain.Entities; // Τα DTOs (Records)
+using CreditFlowAPI.Domain.Enums;    // Τα Enums (AuditAction, DecisionType)
+using CreditFlowAPI.Feature.Loans.Commands;
 using CreditFlowAPI.Feature.Loans.Queries;
-using MediatR;
+using MediatR; // Χρειάζεται για το Mediator
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,63 +11,114 @@ namespace CreditFlowAPI.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class LoansController : ControllerBase
+    public class LoansController : BaseApiController
     {
-        private readonly IMediator _mediator;
+        // Helper για το User Id
+        private string UserId => CurrentUser.UserId;
 
-        public LoansController(IMediator mediator)
+        // 1. Create Loan
+        [HttpPost("createloan")]
+        public async Task<ActionResult<Guid>> Create([FromBody] CreateLoanRequest request)
         {
-            _mediator = mediator;
+            // FIX: Χρήση constructor (Positional Record)
+            var command = new CreateLoanCommand(
+                request.LoanAmount,
+                request.TermMonths,
+                request.Purpose
+            );
+
+            await AuditService.LogAsync(UserId, AuditAction.CreateLoanApplication.ToString(), "User requested CreateLoan");
+
+            return await Mediator.Send(command);
         }
 
-        // POST api/loans
-        [HttpPost]
-        public async Task<ActionResult<Guid>> Create(CreateLoanCommand command)
+        // 2. Get My Loans
+        [HttpPost("getloans")]
+        public async Task<ActionResult<List<LoanDto>>> GetLoans([FromBody] GetLoansRequest request)
         {
-            var id = await _mediator.Send(command);
-            return CreatedAtAction(nameof(Get), new { id }, id); // 201 Created
+            await AuditService.LogAsync(UserId, AuditAction.ViewLoans.ToString(), "User requested GetLoan list");
+            return await Mediator.Send(new GetMyLoansQuery());
         }
 
-        // GET api/loans
-        [HttpGet]
-        public async Task<ActionResult<List<LoanDto>>> Get()
+        // 3. Get Details (ΝΕΟ - Λύνει το error για το GetLoanByIdQuery αν το έφτιαξες στο βήμα 2)
+        [HttpPost("getloandetails")]
+        public async Task<ActionResult<LoanDto>> GetLoanDetails([FromBody] GetLoanDetailsRequest request)
         {
-            return await _mediator.Send(new GetMyLoansQuery());
+            await AuditService.LogAsync(UserId, "VIEW_LOAN_DETAILS", $"User viewed loan {request.LoanId}");
+            return await Mediator.Send(new GetLoanByIdQuery(request.LoanId));
         }
 
-        // PUT api/loans/{id}/submit
-        [HttpPut("{id}/submit")]
-        public async Task<IActionResult> Submit(Guid id)
+        // 4. Submit Loan
+        [HttpPost("submitloan")]
+        public async Task<IActionResult> Submit([FromBody] SubmitLoanRequest request)
         {
-            // Προσοχή: Το ID στο URL πρέπει να μπει στο Command
-            await _mediator.Send(new SubmitLoanCommand(id));
-            return NoContent(); // 204 Success
+            await Mediator.Send(new SubmitLoanCommand(request.LoanId));
+
+            await AuditService.LogAsync(
+                UserId,
+                AuditAction.SubmitLoanApplication.ToString(),
+                $"User requested Submit Loan with id {request.LoanId}"
+            );
+
+            return NoContent();
         }
 
-        // POST api/loans/{id}/documents
-        [HttpPost("{id}/documents")]
-        public async Task<ActionResult<Guid>> UploadDocument(Guid id, IFormFile file)
+        // 5. Upload Document
+        [HttpPost("uploaddocument")]
+        public async Task<ActionResult<Guid>> UploadDocument([FromForm] UploadDocumentRequest request)
         {
-            var command = new UploadDocumentCommand(id, file);
-            var docId = await _mediator.Send(command);
+            var command = new UploadDocumentCommand(request.LoanId, request.File);
+            var docId = await Mediator.Send(command);
+
+            await AuditService.LogAsync(UserId, "UPLOAD_DOCUMENT", $"Uploaded doc for loan {request.LoanId}");
             return Ok(docId);
         }
 
-        // GET api/loans/pending (Για τον Banker)
-        [HttpGet("pending")]
-        public async Task<ActionResult<List<PendingLoanDto>>> GetPending()
+        // 6. Archive Loan (ΝΕΟ)
+        [HttpPost("archiveloan")]
+        public async Task<IActionResult> Archive([FromBody] ArchiveLoanRequest request)
         {
-            // Εδώ αργότερα θα βάλουμε [Authorize(Roles = "Banker")]
-            return await _mediator.Send(new GetPendingLoansQuery());
+            // await Mediator.Send(new ArchiveLoanCommand(request.LoanId)); // Ξε-σχολίασέ το αν έχεις το Command
+            await AuditService.LogAsync(UserId, "ARCHIVE_LOAN", $"Archived loan {request.LoanId}");
+            return NoContent();
         }
 
-        // POST api/loans/{id}/decision
-        [HttpPost("{id}/decision")]
-        public async Task<IActionResult> Decide(Guid id, DecideLoanCommand command)
+        // 7. Get Pending Loans (Banker)
+        [Authorize(Roles = "Banker")]
+        [HttpPost("getpendingloans")]
+        // FIX: Άλλαξα το return type σε PendingLoanDto για να ταιριάζει με το Query
+        public async Task<ActionResult<List<PendingLoanDto>>> GetPending()
         {
-            if (id != command.LoanId) return BadRequest();
+            await AuditService.LogAsync(UserId, "VIEW_PENDING", "Banker requested Pending Loans");
+            return await Mediator.Send(new GetPendingLoansQuery());
+        }
 
-            await _mediator.Send(command);
+        // 8. Decide (Banker)
+        [Authorize(Roles = "Banker")]
+        [HttpPost("decideloan")]
+        public async Task<IActionResult> Decide([FromBody] DecideLoanRequest request)
+        {
+            // FIX: Μετατροπή bool -> DecisionType Enum
+            // Βεβαιώσου ότι έχεις `using CreditFlowAPI.Domain.Enums;`
+            var decision = request.Approved ? DecisionType.Approve : DecisionType.Reject;
+
+            // FIX: Χρήση constructor και χειρισμός του byte[] (rowVersion)
+            // Περνάμε Array.Empty<byte>() προσωρινά αν δεν το έχουμε στο Request
+            var command = new DecideLoanCommand(
+                request.LoanId,
+                decision,
+                request.Comments ?? "No comments",
+                Array.Empty<byte>()
+            );
+
+            await Mediator.Send(command);
+
+            await AuditService.LogAsync(
+                UserId,
+                "DECIDE_LOAN",
+                $"User decided {decision} on loan {request.LoanId}"
+            );
+
             return NoContent();
         }
     }

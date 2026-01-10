@@ -12,6 +12,7 @@ namespace CreditFlowAPI.Base.Persistance
 
         public DbSet<LoanApplication> LoanApplications => Set<LoanApplication>();
         public DbSet<LoanDocument> LoanDocuments => Set<LoanDocument>();
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +25,13 @@ namespace CreditFlowAPI.Base.Persistance
             modelBuilder.Entity<LoanApplication>()
                 .Property(p => p.RowVersion)
                 .IsConcurrencyToken();
+
+            // Ρύθμιση της σχέσης AuditLog -> User
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(log => log.User) 
+                .WithMany()                
+                .HasForeignKey(log => log.UserId) 
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

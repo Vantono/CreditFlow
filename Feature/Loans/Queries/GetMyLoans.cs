@@ -1,10 +1,10 @@
-﻿using CreditFlowAPI.Domain.Interfaces;
+﻿using CreditFlowAPI.Domain.Entities;
+using CreditFlowAPI.Domain.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace CreditFlowAPI.Feature.Loans.Queries
 {
-    public record LoanDto(Guid Id, decimal Amount, string Status, DateTime CreatedOn);
     public record GetMyLoansQuery : IRequest<List<LoanDto>>;
 
     public class GetMyLoansQueryHandler : IRequestHandler<GetMyLoansQuery, List<LoanDto>>
@@ -23,13 +23,18 @@ namespace CreditFlowAPI.Feature.Loans.Queries
             var userId = _currentUserService.UserId;
 
             return await _context.LoanApplications
-                .Where(x => x.ApplicantId == userId) // Φέρνουμε μόνο τα δικά του
+                .AsNoTracking()
+                .Where(x => x.ApplicantId == userId)
                 .OrderByDescending(x => x.CreatedOnUtc)
                 .Select(x => new LoanDto(
-                    x.Id,
-                    x.LoanAmount,
-                    x.Status.ToString(), // Μετατροπή Enum σε String
-                    x.CreatedOnUtc
+                    x.Id,                
+                    x.LoanAmount,                        
+                    x.TermMonths,                        
+                    x.Purpose,                           
+                    x.Status.ToString(),                 
+                    (int)x.Status,                      
+                    x.CreatedOnUtc,    
+                    x.ApplicantId
                 ))
                 .ToListAsync(cancellationToken);
         }

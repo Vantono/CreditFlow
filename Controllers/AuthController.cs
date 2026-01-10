@@ -12,16 +12,16 @@ namespace CreditFlowAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ITokenService _tokenService;
+        private readonly TokenService _tokenService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, ITokenService tokenService)
+        public AuthController(UserManager<ApplicationUser> userManager, TokenService tokenService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto dto)
+        public async Task<IActionResult> Register(RegisterRequest dto)
         {
             // 1. Ελέγχουμε αν υπάρχει ήδη
             if (await _userManager.FindByEmailAsync(dto.Email) != null)
@@ -48,7 +48,7 @@ namespace CreditFlowAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login(LoginRequest dto)
         {
             // 1. Βρίσκουμε τον χρήστη
             var user = await _userManager.FindByEmailAsync(dto.Email);
@@ -59,7 +59,7 @@ namespace CreditFlowAPI.Controllers
             if (!result) return Unauthorized("Λάθος email ή κωδικός.");
 
             // 3. Παράγουμε το Token
-            var token = _tokenService.CreateToken(user);
+            var token = await _tokenService.CreateTokenAsync(user);
 
             // 4. Επιστρέφουμε Token και βασικά στοιχεία
             return Ok(new

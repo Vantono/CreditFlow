@@ -1,4 +1,5 @@
 using CreditFlowAPI.Base.Identity;
+using CreditFlowAPI.Base.Middleware;
 using CreditFlowAPI.Base.Persistance;
 using CreditFlowAPI.Base.Service;
 using CreditFlowAPI.Domain.Interfaces;
@@ -9,42 +10,18 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. SETUP ΥΠΗΡΕΣΙΩΝ (Dependency Injection) ---
+// --- 1. SETUP ΥΠΗΡΕΣΙΩΝ ---
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    // Ρύθμιση για να εμφανιστεί το κουμπάκι "Authorize" (Λουκέτο)
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
+// A. NATIVE OPENAPI
+builder.Services.AddOpenApi();
+
+// B. CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
@@ -54,23 +31,22 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
-// Α. Σύνδεση MediatR 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreditFlowAPI.Feature.Loans.Commands.CreateLoanCommand).Assembly));
 
-// Β. Σύνδεση Validators
+// Γ. MediatR & Validators
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreditFlowAPI.Feature.Loans.Commands.CreateLoanCommand).Assembly));
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLoanCommand>();
 
-// Γ. Σύνδεση Βάσης Δεδομένων (SQLite)
-// Διάβασε το connection string από το appsettings.json
+// Δ. Database & Identity
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=CreditFlow.db";
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(connectionString));
 builder.Services.AddIdentityCore<ApplicationUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
-// Δ. Σύνδεση του Interface της βάσης (Πολύ σημαντικό για να το βλέπει ο Handler)
+
 builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+
+// Ε. Authentication (JWT)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -82,31 +58,38 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
             ValidateAudience = true,
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            ValidateLifetime = true // Να ελέγχει αν έληξε
+            ValidateLifetime = true
         };
     });
 
+// ΣΤ. User Services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-
+builder.Services.AddScoped<TokenService, TokenService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 var app = builder.Build();
-
+// Προσθήκη Middleware για Global Exception Handling
+app.UseMiddleware<ExceptionMiddleware>();
 // --- 2. SETUP PIPELINE ---
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // 1. Δημιουργία JSON Endpoint (Native)
+    app.MapOpenApi();
+
+    // 2. Ενεργοποίηση Swagger UI (Διαβάζει το native json)
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "CreditFlow API v1");
+    });
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowAngularApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+await DbSeeder.SeedRolesAndBankerAsync(app);
 app.Run();
