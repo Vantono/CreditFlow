@@ -1,1 +1,392 @@
-<p>register works!</p>
+<div class="register-container">
+
+  <!-- Left Panel: Brand Showcase -->
+  <div class="brand-panel">
+    <div class="brand-content">
+      <!-- Logo/Branding -->
+      <div class="brand-header">
+        <h1 class="brand-title">CreditFlow</h1>
+        <p class="brand-tagline">Join the Future of Lending</p>
+      </div>
+
+      <!-- Key Benefits -->
+      <div class="benefits-list">
+        <div class="benefit-item">
+          <i class="pi pi-check-circle benefit-icon"></i>
+          <div class="benefit-text">
+            <h3>Quick & Easy Registration</h3>
+            <p>Create your account in under 2 minutes</p>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <i class="pi pi-verified benefit-icon"></i>
+          <div class="benefit-text">
+            <h3>Trusted Platform</h3>
+            <p>Join thousands of satisfied customers</p>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <i class="pi pi-lock benefit-icon"></i>
+          <div class="benefit-text">
+            <h3>Your Data is Safe</h3>
+            <p>Enterprise-grade encryption and security</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative Elements -->
+      <div class="brand-decoration"></div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Registration Form -->
+  <div class="form-panel">
+    <div class="form-container">
+
+      <!-- Header -->
+      <div class="form-header">
+        <h1 class="form-title">Create Account</h1>
+        <p class="form-subtitle">Start your journey with CreditFlow</p>
+      </div>
+
+      <!-- Success Message -->
+      @if (successMessage()) {
+        <div class="success-message-container">
+          <p-message severity="success" icon="pi pi-check-circle" styleClass="w-full justify-content-start">
+            {{ successMessage() }}
+          </p-message>
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="error-message-container">
+          <p-message severity="error" icon="pi pi-times-circle" styleClass="w-full justify-content-start">
+            {{ errorMessage() }}
+          </p-message>
+        </div>
+      }
+
+      <!-- Registration Form -->
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+
+        <!-- Name Fields Row -->
+        <div class="field-row">
+          <!-- First Name Field -->
+          <div class="field">
+            <label for="firstName" class="field-label">
+              <i class="pi pi-user label-icon"></i>
+              First Name
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              pInputText
+              formControlName="firstName"
+              class="w-full input-field"
+              placeholder="John"
+            />
+            @if (registerForm.get('firstName')?.dirty && registerForm.get('firstName')?.invalid) {
+              <small class="p-error block mt-1">
+                First name is required (min 2 characters).
+              </small>
+            }
+          </div>
+
+          <!-- Last Name Field -->
+          <div class="field">
+            <label for="lastName" class="field-label">
+              <i class="pi pi-user label-icon"></i>
+              Last Name
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              pInputText
+              formControlName="lastName"
+              class="w-full input-field"
+              placeholder="Doe"
+            />
+            @if (registerForm.get('lastName')?.dirty && registerForm.get('lastName')?.invalid) {
+              <small class="p-error block mt-1">
+                Last name is required (min 2 characters).
+              </small>
+            }
+          </div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="field mb-4">
+          <label for="email" class="field-label">
+            <i class="pi pi-envelope label-icon"></i>
+            Email Address
+          </label>
+          <input
+            id="email"
+            type="text"
+            pInputText
+            formControlName="email"
+            class="w-full input-field"
+            placeholder="your.email@example.com"
+          />
+          @if (registerForm.get('email')?.dirty && registerForm.get('email')?.invalid) {
+            <small class="p-error block mt-1">
+              Please enter a valid email address.
+            </small>
+          }
+        </div>
+
+        <!-- Password Field -->
+        <div class="field mb-4">
+          <label for="password" class="field-label">
+            <i class="pi pi-lock label-icon"></i>
+            Password
+          </label>
+          <p-password
+            id="password"
+            formControlName="password"
+            [toggleMask]="true"
+            [feedback]="true"
+            styleClass="w-full"
+            inputStyleClass="w-full input-field"
+            placeholder="Create a strong password"
+          ></p-password>
+          @if (registerForm.get('password')?.dirty && registerForm.get('password')?.invalid) {
+            <small class="p-error block mt-1">
+              Password must be at least 6 characters.
+            </small>
+          }
+        </div>
+
+        <!-- Confirm Password Field -->
+        <div class="field mb-4">
+          <label for="confirmPassword" class="field-label">
+            <i class="pi pi-lock label-icon"></i>
+            Confirm Password
+          </label>
+          <p-password
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            [toggleMask]="true"
+            [feedback]="false"
+            styleClass="w-full"
+            inputStyleClass="w-full input-field"
+            placeholder="Re-enter your password"
+          ></p-password>
+          @if (registerForm.get('confirmPassword')?.dirty && registerForm.get('confirmPassword')?.hasError('passwordMismatch')) {
+            <small class="p-error block mt-1">
+              Passwords do not match.
+            </small>
+          }
+        </div>
+
+        <!-- Divider -->
+        <div class="form-divider">
+          <span class="divider-text">Personal Information</span>
+        </div>
+
+        <!-- SSN Field -->
+        <div class="field mb-4">
+          <label for="taxId" class="field-label">
+            <i class="pi pi-id-card label-icon"></i>
+            Social Security Number (SSN)
+          </label>
+          <p-inputMask
+            id="taxId"
+            mask="999-99-9999"
+            formControlName="taxId"
+            placeholder="123-45-6789"
+            styleClass="w-full"
+            inputStyleClass="input-field"
+          ></p-inputMask>
+          @if (registerForm.get('taxId')?.dirty && registerForm.get('taxId')?.invalid) {
+            <small class="p-error block mt-1">
+              Valid SSN is required (XXX-XX-XXXX).
+            </small>
+          }
+          <small class="text-500 block mt-1">
+            <i class="pi pi-lock" style="font-size: 0.75rem"></i>
+            Your SSN is encrypted and securely stored
+          </small>
+        </div>
+
+        <!-- Date of Birth Field -->
+        <div class="field mb-4">
+          <label for="dateOfBirth" class="field-label">
+            <i class="pi pi-calendar label-icon"></i>
+            Date of Birth
+          </label>
+          <p-datepicker
+            id="dateOfBirth"
+            formControlName="dateOfBirth"
+            placeholder="MM/DD/YYYY"
+            [showIcon]="true"
+            [maxDate]="maxDate"
+            dateFormat="mm/dd/yy"
+            styleClass="w-full"
+            [inputStyle]="{'width': '100%'}"
+            inputStyleClass="input-field"
+          ></p-datepicker>
+          @if (registerForm.get('dateOfBirth')?.dirty && registerForm.get('dateOfBirth')?.invalid) {
+            <small class="p-error block mt-1">
+              @if (registerForm.get('dateOfBirth')?.hasError('underAge')) {
+                You must be at least 18 years old.
+              } @else {
+                Date of birth is required.
+              }
+            </small>
+          }
+        </div>
+
+        <!-- Phone Number Field -->
+        <div class="field mb-4">
+          <label for="phoneNumber" class="field-label">
+            <i class="pi pi-phone label-icon"></i>
+            Phone Number
+          </label>
+          <p-inputMask
+            id="phoneNumber"
+            mask="(999) 999-9999"
+            formControlName="phoneNumber"
+            placeholder="(555) 123-4567"
+            styleClass="w-full"
+            inputStyleClass="input-field"
+          ></p-inputMask>
+          @if (registerForm.get('phoneNumber')?.dirty && registerForm.get('phoneNumber')?.invalid) {
+            <small class="p-error block mt-1">
+              Valid phone number is required.
+            </small>
+          }
+        </div>
+
+        <!-- Divider -->
+        <div class="form-divider">
+          <span class="divider-text">Address Information</span>
+        </div>
+
+        <!-- Street Address Field -->
+        <div class="field mb-4">
+          <label for="street" class="field-label">
+            <i class="pi pi-home label-icon"></i>
+            Street Address
+          </label>
+          <input
+            id="street"
+            type="text"
+            pInputText
+            formControlName="street"
+            class="w-full input-field"
+            placeholder="123 Main Street"
+          />
+          @if (registerForm.get('street')?.dirty && registerForm.get('street')?.invalid) {
+            <small class="p-error block mt-1">
+              Street address is required.
+            </small>
+          }
+        </div>
+
+        <!-- City, State Row -->
+        <div class="field-row">
+          <!-- City Field -->
+          <div class="field">
+            <label for="city" class="field-label">
+              <i class="pi pi-map-marker label-icon"></i>
+              City
+            </label>
+            <input
+              id="city"
+              type="text"
+              pInputText
+              formControlName="city"
+              class="w-full input-field"
+              placeholder="New York"
+            />
+            @if (registerForm.get('city')?.dirty && registerForm.get('city')?.invalid) {
+              <small class="p-error block mt-1">
+                City is required.
+              </small>
+            }
+          </div>
+
+          <!-- State Field -->
+          <div class="field">
+            <label for="state" class="field-label">
+              <i class="pi pi-flag label-icon"></i>
+              State
+            </label>
+            <input
+              id="state"
+              type="text"
+              pInputText
+              formControlName="state"
+              class="w-full input-field"
+              placeholder="NY"
+              maxlength="2"
+              style="text-transform: uppercase"
+            />
+            @if (registerForm.get('state')?.dirty && registerForm.get('state')?.invalid) {
+              <small class="p-error block mt-1">
+                State is required.
+              </small>
+            }
+          </div>
+        </div>
+
+        <!-- ZIP Code Field -->
+        <div class="field mb-4">
+          <label for="zipCode" class="field-label">
+            <i class="pi pi-inbox label-icon"></i>
+            ZIP Code
+          </label>
+          <input
+            id="zipCode"
+            type="text"
+            pInputText
+            formControlName="zipCode"
+            class="w-full input-field"
+            placeholder="10001"
+            maxlength="5"
+          />
+          @if (registerForm.get('zipCode')?.dirty && registerForm.get('zipCode')?.invalid) {
+            <small class="p-error block mt-1">
+              Valid 5-digit ZIP code is required.
+            </small>
+          }
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <p-button
+            [label]="isLoading() ? 'Creating Account...' : 'Create Account'"
+            type="submit"
+            [loading]="isLoading()"
+            styleClass="w-full submit-button"
+            [disabled]="registerForm.invalid">
+          </p-button>
+
+          <!-- Login Link -->
+          <div class="login-link">
+            <span class="text-600">Already have an account? </span>
+            <a routerLink="/auth/login" class="font-bold text-primary no-underline cursor-pointer">Sign In</a>
+          </div>
+        </div>
+
+      </form>
+
+      <!-- Security Badge -->
+      <div class="security-badge">
+        <i class="pi pi-shield"></i>
+        <span>Your information is protected and encrypted</span>
+      </div>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <span class="copyright">&copy; 2024 CreditFlow. All rights reserved.</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>

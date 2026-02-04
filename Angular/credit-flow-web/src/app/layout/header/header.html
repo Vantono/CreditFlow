@@ -1,1 +1,42 @@
-<p>header works!</p>
+<header class="app-header">
+  <div class="header-content">
+    <div class="header-left">
+      <div class="brand" (click)="navigateToProfile()">
+        <i class="pi pi-credit-card brand-icon"></i>
+        <span class="brand-name">CreditFlow</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <!-- Language Selector -->
+      <p-select [options]="languageOptions" [(ngModel)]="selectedLanguage" optionLabel="label" optionValue="value"
+        (onChange)="onLanguageChange($event)" styleClass="language-dropdown">
+
+        <ng-template pTemplate="selectedItem" let-selectedOption>
+          <div class="flex align-items-center gap-2">
+            <img [src]="selectedOption.flag" class="flag-image" [alt]="selectedOption.label" />
+            <span>{{ selectedOption.label }}</span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="item" let-lang>
+          <div class="flex align-items-center gap-2">
+            <img [src]="lang.flag" class="flag-image" [alt]="lang.label" />
+            <span>{{ lang.label }}</span>
+          </div>
+        </ng-template>
+
+      </p-select>
+      <div class="user-info">
+        <i class="pi pi-user"></i>
+        <span class="user-name">{{ authStore.user()?.userName }}</span>
+        @if (authStore.isBanker()) {
+        <span class="user-role role-banker">Banker</span>
+        } @else {
+        <span class="user-role role-customer">Customer</span>
+        }
+      </div>
+      <p-button icon="pi pi-sign-out" label="Logout" (onClick)="logout()" severity="secondary" [outlined]="true"
+        size="small" />
+    </div>
+  </div>
+</header>

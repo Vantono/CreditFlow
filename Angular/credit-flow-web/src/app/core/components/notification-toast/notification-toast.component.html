@@ -1,0 +1,16 @@
+<div class="toast-container">
+  @for (toast of toasts(); track toast.id) {
+    <div class="toast" [class]="'toast-' + toast.type" [@slideInOut]>
+      <div class="toast-icon">
+        {{ getIcon(toast.type) }}
+      </div>
+      <div class="toast-content">
+        <h4>{{ toast.title }}</h4>
+        <p>{{ toast.message }}</p>
+      </div>
+      <button class="toast-close" (click)="removeToast(toast.id)" aria-label="Close notification">
+        ✕
+      </button>
+    </div>
+  }
+</div>

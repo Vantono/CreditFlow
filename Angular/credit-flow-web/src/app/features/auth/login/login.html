@@ -1,62 +1,137 @@
-<div class="flex justify-content-center align-items-center min-h-screen bg-blue-50">
-  
-  <p-card header="Welcome Back" subheader="Sign in to continue to CreditFlow" [style]="{ width: '400px' }">
-    
-@if (errorMessage()) {
-    <div class="mb-3">
-        <p-message severity="error" icon="pi pi-times-circle" styleClass="w-full justify-content-start">
-            {{ errorMessage() }}
-        </p-message>
-    </div>
-}
+<div class="login-container">
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      
-      <div class="field mb-4">
-        <label for="email" class="block text-900 font-medium mb-2">Email</label>
-        <input 
-          id="email" 
-          type="text" 
-          pInputText 
-          formControlName="email" 
-          class="w-full" 
-          placeholder="email@example.com"
-        />
-        @if (loginForm.get('email')?.dirty && loginForm.get('email')?.invalid) {
-          <small class="p-error block">
-            Please enter a valid email address.
-          </small>
-        }
+  <!-- Left Panel: Brand Showcase -->
+  <div class="brand-panel">
+    <div class="brand-content">
+      <!-- Logo/Branding -->
+      <div class="brand-header">
+        <h1 class="brand-title">CreditFlow</h1>
+        <p class="brand-tagline">Lending in the Digital Age</p>
       </div>
 
-      <div class="field mb-4">
-        <label for="password" class="block text-900 font-medium mb-2">Password</label>
-        <p-password 
-          id="password" 
-          formControlName="password" 
-          [toggleMask]="true" 
-          [feedback]="false"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-          placeholder="Password"
-        ></p-password>
-      </div>
+      <!-- Key Benefits -->
+      <div class="benefits-list">
+        <div class="benefit-item">
+          <i class="pi pi-bolt benefit-icon"></i>
+          <div class="benefit-text">
+            <h3>Instant Application Processing</h3>
+            <p>Get your loan application reviewed in minutes, not days</p>
+          </div>
+        </div>
 
-      <div class="flex flex-column gap-3">
-        <p-button 
-          label="Sign In" 
-          type="submit" 
-          [loading]="isLoading()" 
-          styleClass="w-full"
-          [disabled]="loginForm.invalid">
-        </p-button>
+        <div class="benefit-item">
+          <i class="pi pi-shield benefit-icon"></i>
+          <div class="benefit-text">
+            <h3>Bank-Grade Security</h3>
+            <p>Your financial data is encrypted and protected</p>
+          </div>
+        </div>
 
-        <div class="text-center mt-2">
-          <span class="text-600">Don't have an account? </span>
-          <a routerLink="/auth/register" class="font-bold text-primary no-underline cursor-pointer">Register</a>
+        <div class="benefit-item">
+          <i class="pi pi-mobile benefit-icon"></i>
+          <div class="benefit-text">
+            <h3>24/7 Access From Anywhere</h3>
+            <p>Apply for loans anytime, from any device</p>
+          </div>
         </div>
       </div>
 
-    </form>
-  </p-card>
+      <!-- Decorative Elements -->
+      <div class="brand-decoration"></div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Login Form -->
+  <div class="form-panel">
+    <div class="form-container">
+
+      <!-- Header -->
+      <div class="form-header">
+        <h1 class="form-title">Welcome Back</h1>
+        <p class="form-subtitle">Sign in to continue to CreditFlow</p>
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="error-message-container">
+          <p-message severity="error" icon="pi pi-times-circle" styleClass="w-full justify-content-start">
+            {{ errorMessage() }}
+          </p-message>
+        </div>
+      }
+
+      <!-- Login Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+
+        <!-- Email Field -->
+        <div class="field mb-4">
+          <label for="email" class="field-label">
+            <i class="pi pi-envelope label-icon"></i>
+            Email Address
+          </label>
+          <input
+            id="email"
+            type="text"
+            pInputText
+            formControlName="email"
+            class="w-full input-field"
+            placeholder="your.email@example.com"
+          />
+          @if (loginForm.get('email')?.dirty && loginForm.get('email')?.invalid) {
+            <small class="p-error block mt-1">
+              Please enter a valid email address.
+            </small>
+          }
+        </div>
+
+        <!-- Password Field -->
+        <div class="field mb-4">
+          <label for="password" class="field-label">
+            <i class="pi pi-lock label-icon"></i>
+            Password
+          </label>
+          <p-password
+            id="password"
+            formControlName="password"
+            [toggleMask]="true"
+            [feedback]="false"
+            styleClass="w-full"
+            inputStyleClass="w-full input-field"
+            placeholder="Enter your password"
+          ></p-password>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <p-button
+            [label]="isLoading() ? 'Signing in...' : 'Sign In'"
+            type="submit"
+            [loading]="isLoading()"
+            styleClass="w-full submit-button"
+            [disabled]="loginForm.invalid">
+          </p-button>
+
+          <!-- Register Link -->
+          <div class="register-link">
+            <span class="text-600">Don't have an account? </span>
+            <a routerLink="/auth/register" class="font-bold text-primary no-underline cursor-pointer">Register</a>
+          </div>
+        </div>
+
+      </form>
+
+      <!-- Security Badge -->
+      <div class="security-badge">
+        <i class="pi pi-lock"></i>
+        <span>SSL Encrypted Connection</span>
+      </div>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <span class="copyright">&copy; {{year()}} CreditFlow. All rights reserved.</span>
+      </div>
+
+    </div>
+  </div>
+
 </div>

@@ -35,18 +35,17 @@ export class AuthStore {
   // ==========================================================
 
   login(authData: AuthResponse) {
-    // 1. Ενημερώνουμε το Signal -> Όλη η εφαρμογή αντιδρά αμέσως
     this._user.set(authData);
-    
-    // 2. Το σώζουμε στο localStorage για να αντέξει το Refresh (F5)
+
     localStorage.setItem('creditflow_user', JSON.stringify(authData));
 
-    // 3. Redirect ανάλογα με τον ρόλο
-    if (this.isBanker()) {
-      this.router.navigate(['/banker']);
-    } else {
-      this.router.navigate(['/dashboard']);
-    }
+    setTimeout(() => {
+      if (this.isBanker()) {
+        this.router.navigate(['/banker']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
+    }, 0);
   }
 
   logout() {

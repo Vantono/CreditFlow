@@ -34,7 +34,12 @@ namespace CreditFlowAPI.Feature.Loans.Queries
                     x.Status.ToString(),                 
                     (int)x.Status,                      
                     x.CreatedOnUtc,    
-                    x.ApplicantId
+                    x.ApplicantId,
+                    x.InterestRate,
+                    x.MonthlyPayment,
+                    x.TotalInterest,
+                    x.DebtToIncomeRatio,
+                    x.RiskLevel
                 ))
                 .ToListAsync(cancellationToken);
         }

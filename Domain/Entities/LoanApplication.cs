@@ -14,6 +14,20 @@ namespace CreditFlowAPI.Domain.Entities
         public int TermMonths { get; set; }
         public string Purpose { get; set; } = string.Empty;
 
+        // Employment Information
+        public string? EmployerName { get; set; }
+        public string? JobTitle { get; set; }
+        public int YearsEmployed { get; set; }
+        public decimal MonthlyIncome { get; set; }
+        public decimal MonthlyExpenses { get; set; }
+
+        // Calculated Fields
+        public decimal InterestRate { get; set; }  // Annual percentage rate
+        public decimal MonthlyPayment { get; set; }
+        public decimal TotalInterest { get; set; }
+        public decimal DebtToIncomeRatio { get; set; }
+        public string? RiskLevel { get; set; }  // Low, Medium, High
+
         // State Management
         public LoanStatus Status { get; set; } = LoanStatus.Draft;
 

@@ -25,8 +25,14 @@ namespace CreditFlowAPI.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("City")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
@@ -68,11 +74,23 @@ namespace CreditFlowAPI.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("State")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxId")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ZipCode")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -130,11 +148,35 @@ namespace CreditFlowAPI.Migrations
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("DebtToIncomeRatio")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmployerName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("InterestRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("JobTitle")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("LoanAmount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("MonthlyExpenses")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("MonthlyIncome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("MonthlyPayment")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Purpose")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RiskLevel")
                         .HasColumnType("TEXT");
 
                     b.Property<byte[]>("RowVersion")
@@ -148,6 +190,12 @@ namespace CreditFlowAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("TermMonths")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TotalInterest")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("YearsEmployed")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

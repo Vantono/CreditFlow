@@ -1,4 +1,5 @@
-﻿using CreditFlowAPI.Domain.Entities;
+﻿using CreditFlowAPI.Base.Service;
+using CreditFlowAPI.Domain.Entities;
 using CreditFlowAPI.Domain.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,13 +12,19 @@ namespace CreditFlowAPI.Feature.Loans.Commands
     {
         private readonly IApplicationDbContext _context;
         private readonly ICurrentUserService _currentUserService;
-        // Θα χρειαστείς ένα FileService για να σώσεις το αρχείο φυσικά στον δίσκο
-        // private readonly IFileService _fileService; 
+        private readonly IFileService _fileService;
+        private readonly ILogger<UploadDocumentCommandHandler> _logger;
 
-        public UploadDocumentCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
+        public UploadDocumentCommandHandler(
+            IApplicationDbContext context,
+            ICurrentUserService currentUserService,
+            IFileService fileService,
+            ILogger<UploadDocumentCommandHandler> logger)
         {
             _context = context;
             _currentUserService = currentUserService;
+            _fileService = fileService;
+            _logger = logger;
         }
 
         public async Task<Guid> Handle(UploadDocumentCommand request, CancellationToken cancellationToken)
@@ -28,31 +35,50 @@ namespace CreditFlowAPI.Feature.Loans.Commands
                 .Include(l => l.Documents)
                 .FirstOrDefaultAsync(l => l.Id == request.LoanId && l.ApplicantId == userId, cancellationToken);
 
-            if (loan == null) throw new KeyNotFoundException("Loan not found");
+            if (loan == null)
+                throw new KeyNotFoundException($"Loan {request.LoanId} not found");
 
-            // VALIDATION: Δεν ανεβάζουμε αρχεία αν έχει γίνει Submit!
+            // VALIDATION: Don't upload documents after submission
             if (loan.Status != Domain.Enums.LoanStatus.Draft)
             {
-                throw new InvalidOperationException("Δεν μπορείτε να ανεβάσετε έγγραφα σε υποβληθείσα αίτηση.");
+                throw new InvalidOperationException("Cannot upload documents to a submitted loan application");
             }
 
-            // Εδώ θα καλούσες το FileService για save στον δίσκο
-            // var filePath = await _fileService.SaveFileAsync(request.File);
-            var fakePath = $"/uploads/{Guid.NewGuid()}.pdf"; // Mock για τώρα
+            // Validate file before saving
+            if (!_fileService.IsValidDocumentType(request.File))
+                throw new InvalidOperationException($"File type not allowed");
 
-            var document = new LoanDocument
+            if (!_fileService.IsValidFileSize(request.File))
+                throw new InvalidOperationException($"File size exceeds maximum allowed limit");
+
+            try
             {
-                Id = Guid.NewGuid(),
-                LoanApplicationId = loan.Id,
-                FileName = request.File.FileName,
-                FilePath = fakePath,
-                FileSizeInBytes = request.File.Length
-            };
+                // Save file to disk
+                var filePath = await _fileService.SaveLoanDocumentAsync(request.File, request.LoanId, cancellationToken);
 
-            _context.LoanDocuments.Add(document);
-            await _context.SaveChangesAsync(cancellationToken);
+                // Create database record
+                var document = new LoanDocument
+                {
+                    Id = Guid.NewGuid(),
+                    LoanApplicationId = loan.Id,
+                    FileName = request.File.FileName,
+                    FilePath = filePath,
+                    FileSizeInBytes = request.File.Length,
+                    UploadedOnUtc = DateTime.UtcNow
+                };
 
-            return document.Id;
+                _context.LoanDocuments.Add(document);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation($"Document uploaded successfully for loan {request.LoanId}: {request.File.FileName}");
+
+                return document.Id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to upload document for loan {request.LoanId}");
+                throw;
+            }
         }
     }
 }

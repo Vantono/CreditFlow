@@ -2,10 +2,10 @@ using CreditFlowAPI.Base.Identity;
 using CreditFlowAPI.Base.Middleware;
 using CreditFlowAPI.Base.Persistance;
 using CreditFlowAPI.Base.Service;
+using CreditFlowAPI.Base.Hubs;
 using CreditFlowAPI.Domain.Interfaces;
 using CreditFlowAPI.Feature.Loans.Commands;
 using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,29 +14,28 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. SETUP ΥΠΗΡΕΣΙΩΝ ---
+// --- 1. SETUP οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½ ---
 
 builder.Services.AddControllers();
 
 // A. NATIVE OPENAPI
 builder.Services.AddOpenApi();
 
-// B. CORS
+// B. CORS (with SignalR support)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
         policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials(); // Required for SignalR
     });
 });
 
-// Γ. MediatR & Validators
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreditFlowAPI.Feature.Loans.Commands.CreateLoanCommand).Assembly));
 builder.Services.AddValidatorsFromAssemblyContaining<CreateLoanCommand>();
 
-// Δ. Database & Identity
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=CreditFlow.db";
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 
@@ -46,7 +45,6 @@ builder.Services.AddIdentityCore<ApplicationUser>()
 
 builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
 
-// Ε. Authentication (JWT)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -60,36 +58,66 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             ValidateLifetime = true
         };
+
+        // Allow SignalR to use tokens from query string
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
-// ΣΤ. User Services
+// οΏ½οΏ½. User Services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<TokenService, TokenService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<RiskAssessmentService, RiskAssessmentService>();
+builder.Services.AddScoped<LoanCalculationService, LoanCalculationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IFileService, FileService>();
+
+// SignalR
+builder.Services.AddSignalR();
+
 var app = builder.Build();
-// Προσθήκη Middleware για Global Exception Handling
 app.UseMiddleware<ExceptionMiddleware>();
-// --- 2. SETUP PIPELINE ---
 
 if (app.Environment.IsDevelopment())
 {
-    // 1. Δημιουργία JSON Endpoint (Native)
     app.MapOpenApi();
-
-    // 2. Ενεργοποίηση Swagger UI (Διαβάζει το native json)
     app.UseSwaggerUI(options =>
-    {
+    {        
         options.SwaggerEndpoint("/openapi/v1.json", "CreditFlow API v1");
     });
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAngularApp");
 
+// Serve static files from wwwroot/browser (Angular build output)
+var fileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+    Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "browser"));
+app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
+app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider, RequestPath = "" });
+
+app.UseCors("AllowAngularApp");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
+
+// SPA fallback - serve index.html for all non-API routes
+app.MapFallbackToFile("index.html", new StaticFileOptions { FileProvider = fileProvider });
+
 await DbSeeder.SeedRolesAndBankerAsync(app);
 app.Run();

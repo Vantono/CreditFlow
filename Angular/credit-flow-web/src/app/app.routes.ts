@@ -1,45 +1,44 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/auth/login/login.component';
+import { Register } from './features/auth/register/register';
+import { Dashboard } from './features/dashboard/dashboard';
+import { BankerDashboardComponent } from './features/banker/banker-dashboard/banker-dashboard';
+import { MainLayout } from './layout/main-layout/main-layout';
 import { authGuard } from './core/auth/auth-guard';
-// import { RegisterComponent } from './features/auth/register/register.component';
-// import { DashboardComponent } from './features/dashboard/dashboard.component';
-// import { LoanApplicationComponent } from './features/loan-application/loan-application.component';
-// import { BankerDashboardComponent } from './features/banker/banker-dashboard/banker-dashboard.component'; // Τσέκαρε αν το path είναι ακριβώς έτσι
 
 export const routes: Routes = [
-  // 1. Default: Αν μπει σκέτο στο domain -> πήγαινε Login
+  // 1. Default -> Login
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
 
-  // 2. Auth Routes (Δημόσια)
-  { 
-    path: 'auth/login', 
-    component: LoginComponent 
+  // 2. Auth Routes (Public - no layout shell)
+  {
+    path: 'auth/login',
+    component: LoginComponent
   },
-//   { 
-//     path: 'auth/register', 
-//     component: RegisterComponent 
-//   },
+  {
+    path: 'auth/register',
+    component: Register
+  },
 
-//   // 3. Customer Routes (Προστατευμένα)
-//   {
-//     path: 'dashboard',
-//     component: DashboardComponent,
-//     canActivate: [authGuard] // Ο Guard ελέγχει αν είσαι logged in
-//   },
-//   {
-//     path: 'loan-application',
-//     component: LoanApplicationComponent,
-//     canActivate: [authGuard]
-//   },
+  // 3. Protected Routes (wrapped in MainLayout with header + footer)
+  {
+    path: '',
+    component: MainLayout,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: 'dashboard',
+        component: Dashboard
+      },
+      {
+        path: 'banker',
+        component: BankerDashboardComponent,
+        canActivate: [authGuard],
+        data: { role: 'Banker' }
+      }
+    ]
+  },
 
-//   // 4. Banker Routes (Προστατευμένα + Ρόλος)
-//   {
-//     path: 'banker',
-//     component: BankerDashboardComponent,
-//     canActivate: [authGuard],
-//     data: { role: 'Banker' } // <--- Εδώ λέμε στον Guard να ψάξει για ρόλο 'Banker'
-//   },
-
-  // 5. Wildcard: Αν γράψει κάτι άκυρο -> πήγαινε Login
+  // 4. Wildcard -> Login
   { path: '**', redirectTo: 'auth/login' }
 ];

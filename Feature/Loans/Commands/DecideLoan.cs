@@ -1,7 +1,10 @@
 ﻿using CreditFlowAPI.Domain.Enums;
 using CreditFlowAPI.Domain.Interfaces;
+using CreditFlowAPI.Base.Service;
+using CreditFlowAPI.Base.Identity;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace CreditFlowAPI.Feature.Loans.Commands
 {
@@ -17,78 +20,94 @@ namespace CreditFlowAPI.Feature.Loans.Commands
     public class DecideLoanCommandHandler : IRequestHandler<DecideLoanCommand>
     {
         private readonly IApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<DecideLoanCommandHandler> _logger;
 
-        public DecideLoanCommandHandler(IApplicationDbContext context)
+        public DecideLoanCommandHandler(
+            IApplicationDbContext context,
+            INotificationService notificationService,
+            UserManager<ApplicationUser> userManager,
+            ILogger<DecideLoanCommandHandler> logger)
         {
             _context = context;
+            _notificationService = notificationService;
+            _userManager = userManager;
+            _logger = logger;
         }
-
-        //public async Task Handle(DecideLoanCommand request, CancellationToken cancellationToken)
-        //{
-        //    // 1. Βρίσκουμε την αίτηση
-        //    var loan = await _context.LoanApplications
-        //        .FirstOrDefaultAsync(l => l.Id == request.LoanId, cancellationToken);
-
-        //    if (loan == null) throw new KeyNotFoundException("Η αίτηση δεν βρέθηκε.");
-
-        //    // 2. CONCURRENCY CHECK (Ο έλεγχος του Διαιτητή)
-        //    // Συγκρίνουμε το RowVersion που έστειλε ο χρήστης με αυτό που έχει η βάση.
-        //    // Σημείωση: Το EF Core το κάνει αυτόματα αν πειράξεις το RowVersion, 
-        //    // αλλά εδώ κάνουμε έναν explicit έλεγχο για να είμαστε σίγουροι.
-        //    if (!loan.RowVersion.SequenceEqual(request.RowVersion))
-        //    {
-        //        throw new DbUpdateConcurrencyException("Η αίτηση έχει τροποποιηθεί από άλλον χρήστη. Παρακαλώ κάντε ανανέωση.");
-        //    }
-
-        //    // 3. Εκτέλεση Business Logic
-        //    if (request.Decision == DecisionType.Approve)
-        //    {
-        //        loan.Approve(request.Comments);
-        //    }
-        //    else
-        //    {
-        //        loan.Reject(request.Comments);
-        //    }
-
-        //    // 4. Ενημέρωση του RowVersion (Για την επόμενη φορά)
-        //    // Στο SQL Server γίνεται αυτόματα, στην SQLite καλό είναι να το αλλάζουμε εμείς
-        //    // ή να αφήσουμε το EF Core να διαχειριστεί το conflict στο SaveChanges.
-        //    // Για το Portfolio, αρκεί το SaveChanges που θα χτυπήσει αν τα bytes δεν ταιριάζουν.
-
-        //    // ΣΗΜΑΝΤΙΚΟ: Στο EF Core, πρέπει να του πούμε ότι το RowVersion που ξέρουμε είναι το "παλιό"
-        //    _context.LoanApplications.Entry(loan).OriginalValues["RowVersion"] = request.RowVersion;
-        //    loan.RowVersion = Guid.NewGuid().ToByteArray();
-        //    await _context.SaveChangesAsync(cancellationToken);
-        //}
 
         public async Task Handle(DecideLoanCommand request, CancellationToken cancellationToken)
         {
-            // 1. Φέρνουμε την εγγραφή "φρέσκια" από τη βάση
-            var loan = await _context.LoanApplications
-                .FirstOrDefaultAsync(x => x.Id == request.LoanId, cancellationToken);
-
-            if (loan == null)
+            try
             {
-                // Αν δεν βρεθεί, πετάμε error (ή επιστρέφουμε κάτι ανάλογα τη λογική σου)
-                throw new KeyNotFoundException($"Loan with id {request.LoanId} not found.");
+                // 1. Fetch loan with fresh data
+                var loan = await _context.LoanApplications
+                    .FirstOrDefaultAsync(x => x.Id == request.LoanId, cancellationToken);
+
+                if (loan == null)
+                {
+                    throw new KeyNotFoundException($"Loan with id {request.LoanId} not found.");
+                }
+
+                // 2. Get applicant details for notifications
+                var applicant = await _userManager.FindByIdAsync(loan.ApplicantId);
+                if (applicant == null)
+                {
+                    throw new KeyNotFoundException($"Applicant not found");
+                }
+
+                // 3. Apply decision
+                var isApproved = request.Decision == DecisionType.Approve;
+                loan.Status = isApproved ? LoanStatus.Approved : LoanStatus.Rejected;
+                loan.BankerComments = request.Comments;
+
+                // 4. Save to database
+                await _context.SaveChangesAsync(cancellationToken);
+
+                // 5. Send real-time SignalR notification
+                await _notificationService.SendLoanStatusUpdate(
+                    loan.ApplicantId,
+                    loan.Id.ToString(),
+                    isApproved ? "Approved" : "Rejected",
+                    request.Comments
+                );
+
+                // 6. Send email notification
+                if (isApproved)
+                {
+                    var monthlyPayment = CalculateMonthlyPayment(loan.LoanAmount, loan.TermMonths);
+                    await _notificationService.SendLoanApprovalEmail(
+                        applicant.Email ?? string.Empty,
+                        $"{applicant.FirstName} {applicant.LastName}",
+                        loan.Id.ToString(),
+                        loan.LoanAmount,
+                        monthlyPayment
+                    );
+                }
+                else
+                {
+                    await _notificationService.SendLoanRejectionEmail(
+                        applicant.Email ?? string.Empty,
+                        $"{applicant.FirstName} {applicant.LastName}",
+                        loan.Id.ToString(),
+                        request.Comments
+                    );
+                }
+
+                _logger.LogInformation($"Loan {request.LoanId} decided as {(isApproved ? "APPROVED" : "REJECTED")}");
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error processing loan decision for {request.LoanId}");
+                throw;
+            }
+        }
 
-            // 2. Εφαρμόζουμε την απόφαση
-            // ΠΡΟΣΟΧΗ: ΔΕΝ πειράζουμε το RowVersion, ούτε το ελέγχουμε εδώ.
-            // Αφήνουμε το EF Core να διαχειριστεί το concurrency αυτόματα στο Save.
-
-            loan.Status = request.Decision == DecisionType.Approve
-                ? LoanStatus.Approved
-                : LoanStatus.Rejected;
-
-            // Αν έχεις πεδίο σχολίων στο Entity:
-            // loan.BankerComments = request.Comments; 
-
-            // 3. Αποθήκευση
-            await _context.SaveChangesAsync(cancellationToken);
-
-            // Επιστρέφουμε Unit (void για το MediatR)
-            return;
+        private decimal CalculateMonthlyPayment(decimal principal, int termMonths)
+        {
+            // Simple calculation: principal / term months (no interest for simplicity)
+            // In production, use the LoanCalculationService
+            return Math.Round(principal / termMonths, 2);
         }
     }
 }

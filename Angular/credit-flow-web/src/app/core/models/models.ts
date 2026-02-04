@@ -5,6 +5,13 @@ export interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
+  taxId: string;
+  dateOfBirth: string; // ISO date string
+  phoneNumber: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
 }
 
 export interface LoginRequest {
@@ -21,16 +28,37 @@ export interface AuthResponse {
 // --- LOAN MODELS ---
 
 export enum LoanStatus {
-  Pending = 0,
-  Submitted = 1,
-  Approved = 2,
-  Rejected = 3
+  Draft = 1,
+  Submitted = 2,
+  UnderReview = 3,
+  Approved = 4,
+  Rejected = 5
+}
+
+export enum LoanStatusText {
+  Draft = 'Draft',
+  Submitted = 'Submitted',
+  UnderReview = 'UnderReview',
+  Approved = 'Approved',
+  Rejected = 'Rejected',
+  Completed = 'Completed'
+}
+
+export enum RiskLevel {
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High'
 }
 
 export interface CreateLoanRequest {
   loanAmount: number;
   termMonths: number;
   purpose: string;
+  employerName: string;
+  jobTitle: string;
+  yearsEmployed: number;
+  monthlyIncome: number;
+  monthlyExpenses: number;
 }
 
 export interface LoanDto {
@@ -38,10 +66,15 @@ export interface LoanDto {
   loanAmount: number;
   termMonths: number;
   purpose: string;
-  statusName: string;
+  status: LoanStatusText;
   statusCode: LoanStatus;
-  createdOnUtc: string; 
+  createdAt: string;
   applicantName?: string;
+  interestRate?: number;
+  monthlyPayment?: number;
+  totalInterest?: number;
+  debtToIncomeRatio?: number;
+  riskLevel?: RiskLevel;
 }
 
 export interface SubmitLoanRequest {
@@ -55,13 +88,25 @@ export interface GetLoanDetailsRequest {
 // --- BANKER MODELS ---
 
 export interface PendingLoanDto {
-  loanId: string;
-  amount: number;
-  term: number;
-  purpose: string;
-  date: string;
+  id: string;
+  applicantId: string;
   applicantName: string;
-  email: string;
+  applicantEmail: string;
+  amount: number;
+  termMonths: number;
+  purpose: string;
+  employerName: string;
+  jobTitle: string;
+  yearsEmployed: number;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  interestRate: number;
+  monthlyPayment: number;
+  totalInterest: number;
+  debtToIncomeRatio: number;
+  riskLevel: RiskLevel;
+  submittedOn: string;
+  rowVersion: string; // base64 encoded
 }
 
 export enum DecisionType {
@@ -69,9 +114,28 @@ export enum DecisionType {
   Reject = 1
 }
 
+export enum Severity{
+  Success = 'success',
+  Info = 'info',
+  Warn = 'warn',
+  Danger = 'danger'
+}
+
+export enum RiskSeverity{
+  Success = 'success',
+  Warn = 'warn',
+  Danger = 'danger'
+}
+
+export enum Language {
+  English = 'EN',
+  Greek = 'GR'
+}
+
 export interface DecideLoanRequest {
   loanId: string;
   approved: boolean;
   comments?: string;
-  decision?: DecisionType; 
+  decision?: DecisionType;
+  rowVersion?: string; // base64 encoded concurrency token
 }

@@ -20,9 +20,9 @@ export class ApiService {
   // Χρήση του inject() αντί για constructor (Modern Angular style)
   private http = inject(HttpClient);
   
-  // --- ΠΡΟΣΟΧΗ: Βάλε εδώ το URL του Backend σου ---
-  private apiAuthUrl = 'https://localhost:44325/api/auth'; 
-  private apiLoansUrl = 'https://localhost:44325/api/loans';
+  // API URLs - relative paths since Angular is served from the same server
+  private apiAuthUrl = '/api/auth';
+  private apiLoansUrl = '/api/loans';
 
   // ==========================================================
   // AUTHENTICATION

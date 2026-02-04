@@ -1,1 +1,428 @@
-<p>banker-dashboard works!</p>
+<div class="banker-dashboard">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="pi pi-briefcase"></i>
+      Banker Dashboard
+    </h1>
+    <p class="page-subtitle">Review and manage pending loan applications</p>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <!-- Total Pending -->
+    <p-card pStyleClass="stat-card stat-card-primary">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Pending Applications</span>
+          <span class="stat-value">{{ store.pendingLoans().length }}</span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Total Amount -->
+    <p-card pStyleClass="stat-card stat-card-success">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="pi pi-dollar"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Volume</span>
+          <span class="stat-value">{{ formatCurrency(store.totalPendingAmount()) }}</span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Low Risk Count -->
+    <p-card pStyleClass="stat-card stat-card-info">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Low Risk</span>
+          <span class="stat-value">{{ store.lowRiskCount() }}</span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- High Risk Count -->
+    <p-card pStyleClass="stat-card stat-card-danger">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">High Risk</span>
+          <span class="stat-value">{{ store.highRiskCount() }}</span>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Loans Table -->
+  <p-card pStyleClass="loans-card">
+    <p-table
+      [value]="store.pendingLoans()"
+      [loading]="store.isLoading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      [globalFilterFields]="['applicantName', 'applicantEmail', 'purpose']"
+      pStyleClass="loans-table"
+      #dt>
+
+      <ng-template #caption>
+        <div class="table-header">
+          <h3 class="table-title">
+            <i class="pi pi-list"></i>
+            Loan Applications
+          </h3>
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              type="text"
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+              placeholder="Search applications..."
+              class="search-input" />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template #header>
+        <tr>
+          <th>Applicant</th>
+          <th>Amount</th>
+          <th>Monthly Payment</th>
+          <th>DTI Ratio</th>
+          <th>Risk Level</th>
+          <th>Submitted</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-loan>
+        <tr>
+          <!-- Applicant Info -->
+          <td>
+            <div class="applicant-info">
+              <span class="applicant-name">{{ loan.applicantName }}</span>
+              <span class="applicant-email">{{ loan.applicantEmail }}</span>
+              <span class="applicant-employer">
+                <i class="pi pi-building"></i>
+                {{ loan.employerName }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Amount -->
+          <td>
+            <div class="amount-info">
+              <span class="amount-value">{{ formatCurrency(loan.amount) }}</span>
+              <span class="amount-term">{{ loan.termMonths }} months @ {{ formatPercent(loan.interestRate) }}</span>
+            </div>
+          </td>
+
+          <!-- Monthly Payment -->
+          <td>
+            <span class="monthly-payment">{{ formatCurrency(loan.monthlyPayment) }}/mo</span>
+          </td>
+
+          <!-- DTI Ratio -->
+          <td>
+            <span class="dti-ratio" [class.high-dti]="loan.debtToIncomeRatio > 43">
+              {{ formatPercent(loan.debtToIncomeRatio) }}
+            </span>
+          </td>
+
+          <!-- Risk Level -->
+          <td>
+            <p-tag
+              [value]="loan.riskLevel"
+              [severity]="getRiskSeverity(loan.riskLevel)" />
+          </td>
+
+          <!-- Submitted Date -->
+          <td>
+            <span class="submitted-date">{{ formatDate(loan.submittedOn) }}</span>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="action-buttons">
+              <p-button
+                icon="pi pi-eye"
+                (onClick)="viewDetails(loan)"
+                [text]="true"
+                [rounded]="true"
+                severity="info"
+                pTooltip="View Details"
+                tooltipPosition="top" />
+
+              <p-button
+                icon="pi pi-check"
+                (onClick)="openApproveDialog(loan)"
+                [text]="true"
+                [rounded]="true"
+                severity="success"
+                pTooltip="Approve"
+                tooltipPosition="top" />
+
+              <p-button
+                icon="pi pi-times"
+                (onClick)="openRejectDialog(loan)"
+                [text]="true"
+                [rounded]="true"
+                severity="danger"
+                pTooltip="Reject"
+                tooltipPosition="top" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="empty-state">
+            <div class="empty-content">
+              <i class="pi pi-inbox"></i>
+              <h4>No Pending Applications</h4>
+              <p>All loan applications have been reviewed. Great work!</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Loan Details Dialog -->
+  <p-dialog
+    [(visible)]="showDetailsDialog"
+    [header]="'Loan Application Review'"
+    [modal]="true"
+    [style]="{ width: '800px' }"
+    [draggable]="false"
+    [resizable]="false">
+
+    @if (selectedLoan(); as loan) {
+      <div class="loan-review">
+        <!-- Applicant Section -->
+        <div class="review-section">
+          <h4 class="section-title">
+            <i class="pi pi-user"></i>
+            Applicant Information
+          </h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Name:</span>
+              <span class="detail-value">{{ loan.applicantName }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Email:</span>
+              <span class="detail-value">{{ loan.applicantEmail }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Employer:</span>
+              <span class="detail-value">{{ loan.employerName }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Job Title:</span>
+              <span class="detail-value">{{ loan.jobTitle }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Years Employed:</span>
+              <span class="detail-value">{{ loan.yearsEmployed }} years</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Section -->
+        <div class="review-section">
+          <h4 class="section-title">
+            <i class="pi pi-chart-line"></i>
+            Financial Information
+          </h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Monthly Income:</span>
+              <span class="detail-value highlight-success">{{ formatCurrency(loan.monthlyIncome) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Monthly Expenses:</span>
+              <span class="detail-value">{{ formatCurrency(loan.monthlyExpenses) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Net Cash Flow:</span>
+              <span class="detail-value" [class.text-danger]="loan.monthlyIncome - loan.monthlyExpenses - loan.monthlyPayment < 0">
+                {{ formatCurrency(loan.monthlyIncome - loan.monthlyExpenses - loan.monthlyPayment) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loan Details Section -->
+        <div class="review-section">
+          <h4 class="section-title">
+            <i class="pi pi-dollar"></i>
+            Loan Details
+          </h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Requested Amount:</span>
+              <span class="detail-value highlight-primary">{{ formatCurrency(loan.amount) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Term:</span>
+              <span class="detail-value">{{ loan.termMonths }} months</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Interest Rate:</span>
+              <span class="detail-value">{{ formatPercent(loan.interestRate) }} APR</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Monthly Payment:</span>
+              <span class="detail-value highlight-primary">{{ formatCurrency(loan.monthlyPayment) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Total Interest:</span>
+              <span class="detail-value">{{ formatCurrency(loan.totalInterest) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Total Cost:</span>
+              <span class="detail-value font-semibold">{{ formatCurrency(loan.amount + loan.totalInterest) }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="detail-label">Purpose:</span>
+              <p class="detail-description">{{ loan.purpose }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Assessment Section -->
+        <div class="review-section risk-section">
+          <h4 class="section-title">
+            <i class="pi pi-shield"></i>
+            Risk Assessment
+          </h4>
+          <div class="risk-grid">
+            <div class="risk-metric">
+              <span class="metric-label">Debt-to-Income Ratio</span>
+              <span class="metric-value" [class.text-danger]="loan.debtToIncomeRatio > 43">
+                {{ formatPercent(loan.debtToIncomeRatio) }}
+              </span>
+              <span class="metric-status" [class.text-danger]="loan.debtToIncomeRatio > 43">
+                {{ loan.debtToIncomeRatio > 43 ? 'Above safe threshold (43%)' : 'Within safe range' }}
+              </span>
+            </div>
+            <div class="risk-metric">
+              <span class="metric-label">Risk Level</span>
+              <p-tag
+                [value]="loan.riskLevel"
+                [severity]="getRiskSeverity(loan.riskLevel)"
+                pStyleClass="risk-tag" />
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <ng-template #footer>
+      <div class="dialog-footer">
+        <p-button
+          label="Close"
+          (onClick)="closeDetailsDialog()"
+          severity="secondary"
+          [outlined]="true" />
+        @if (selectedLoan(); as loan) {
+          <p-button
+            label="Reject"
+            icon="pi pi-times"
+            (onClick)="closeDetailsDialog(); openRejectDialog(loan)"
+            severity="danger"
+            [outlined]="true" />
+          <p-button
+            label="Approve"
+            icon="pi pi-check"
+            (onClick)="closeDetailsDialog(); openApproveDialog(loan)"
+            severity="success" />
+        }
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Decision Dialog -->
+  <p-dialog
+    [(visible)]="showDecisionDialog"
+    [header]="decisionType() === 'approve' ? 'Approve Loan Application' : 'Reject Loan Application'"
+    [modal]="true"
+    [style]="{ width: '500px' }"
+    [draggable]="false"
+    [resizable]="false">
+
+    @if (selectedLoan(); as loan) {
+      <div class="decision-content">
+        <div class="decision-info">
+          @if (decisionType() === 'approve') {
+            <div class="approval-message">
+              <i class="pi pi-check-circle"></i>
+              <p>You are about to <strong>approve</strong> the loan application for <strong>{{ loan.applicantName }}</strong>.</p>
+              <ul>
+                <li>Amount: <strong>{{ formatCurrency(loan.amount) }}</strong></li>
+                <li>Monthly Payment: <strong>{{ formatCurrency(loan.monthlyPayment) }}</strong></li>
+                <li>Risk Level: <p-tag [value]="loan.riskLevel" [severity]="getRiskSeverity(loan.riskLevel)" /></li>
+              </ul>
+            </div>
+          } @else {
+            <div class="rejection-message">
+              <i class="pi pi-exclamation-triangle"></i>
+              <p>You are about to <strong>reject</strong> the loan application for <strong>{{ loan.applicantName }}</strong>.</p>
+              <p class="warning-text">This action cannot be undone. Please provide a clear explanation.</p>
+            </div>
+          }
+        </div>
+
+        <form [formGroup]="decisionForm">
+          <div class="field">
+            <label for="comments" class="field-label">
+              <i class="pi pi-comment"></i>
+              Comments (Required)
+            </label>
+            <textarea
+              id="comments"
+              pTextarea
+              formControlName="comments"
+              rows="5"
+              class="w-full"
+              [placeholder]="decisionType() === 'approve' ? 'Provide approval notes and any conditions...' : 'Explain the reason for rejection...'"></textarea>
+            @if (decisionForm.get('comments')?.dirty && decisionForm.get('comments')?.invalid) {
+              <small class="p-error block mt-1">
+                Comments are required (10-500 characters)
+              </small>
+            }
+          </div>
+        </form>
+      </div>
+    }
+
+    <ng-template #footer>
+      <p-button
+        label="Cancel"
+        (onClick)="closeDecisionDialog()"
+        severity="secondary"
+        [outlined]="true" />
+      <p-button
+        [label]="decisionType() === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'"
+        [icon]="decisionType() === 'approve' ? 'pi pi-check' : 'pi pi-times'"
+        (onClick)="submitDecision()"
+        [severity]="decisionType() === 'approve' ? 'success' : 'danger'"
+        [disabled]="decisionForm.invalid" />
+    </ng-template>
+  </p-dialog>
+
+  <p-toast />
+  <p-confirmDialog />
+</div>

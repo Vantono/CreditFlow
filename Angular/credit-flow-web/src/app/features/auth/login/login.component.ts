@@ -40,6 +40,7 @@ export class LoginComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
+  protected year = signal(new Date().getFullYear())
   // Σήμα για το αν φορτώνει (για να δείξουμε spinner στο κουμπί)
   isLoading = signal(false);
   
@@ -79,10 +80,14 @@ export class LoginComponent {
         // Σημείωση: Το authStore.login() έχει ήδη logic για redirect, 
         // οπότε αν δεν υπάρχει returnUrl, θα το αναλάβει εκείνο.
       },
-      error: () => {
+      error: (err: any) => {
         this.isLoading.set(false);
-        // Εμφάνιση μηνύματος λάθους
-        this.errorMessage.set('Invalid email or password.');
+        // Use enhanced error from error handling interceptor
+        if (err.enhancedError) {
+          this.errorMessage.set(err.enhancedError.message);
+        } else {
+          this.errorMessage.set('Invalid email or password.');
+        }
       },
       complete: () => {
         this.isLoading.set(false);

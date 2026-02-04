@@ -12,6 +12,7 @@ namespace CreditFlowAPI.Base.Persistance
 
         public DbSet<LoanApplication> LoanApplications => Set<LoanApplication>();
         public DbSet<LoanDocument> LoanDocuments => Set<LoanDocument>();
+        public new DbSet<ApplicationUser> Users => Set<ApplicationUser>();
         public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

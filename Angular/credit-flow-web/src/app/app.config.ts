@@ -5,8 +5,10 @@ import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { authInterceptor } from './core/interceptors/auth-interceptor';
+import { loggingInterceptor } from './core/interceptors/logging.interceptor';
+import { errorHandlingInterceptor } from './core/interceptors/error-handling.interceptor';
 import { providePrimeNG } from 'primeng/config';
-import Aura from '@primeng/themes/aura'
+import Aura from '@primeuix/themes/aura'
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimationsAsync(),// Για το PrimeNG
     // 2. ΕΝΕΡΓΟΠΟΙΗΣΗ HTTP
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([loggingInterceptor, errorHandlingInterceptor, authInterceptor])),
     providePrimeNG({
         theme: {
             preset: Aura,

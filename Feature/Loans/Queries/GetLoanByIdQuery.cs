@@ -52,7 +52,12 @@ namespace CreditFlowAPI.Feature.Loans.Queries
                 loan.Status.ToString(),
                 (int)loan.Status,
                 loan.CreatedOnUtc,
-                "Me" // Ή loan.ApplicantId αν θες το ID, καθώς δεν έχουμε ακόμα το Join με το όνομα
+                "Me", // Ή loan.ApplicantId αν θες το ID, καθώς δεν έχουμε ακόμα το Join με το όνομα
+                loan.InterestRate,
+                loan.MonthlyPayment,
+                loan.TotalInterest,
+                loan.DebtToIncomeRatio,
+                loan.RiskLevel
             );
         }
     }

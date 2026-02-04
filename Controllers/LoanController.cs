@@ -14,7 +14,7 @@ namespace CreditFlowAPI.Controllers
     public class LoansController : BaseApiController
     {
         // Helper για το User Id
-        private string UserId => CurrentUser.UserId;
+        private string UserId => CurrentUser.UserId ?? string.Empty;
 
         // 1. Create Loan
         [HttpPost("createloan")]
@@ -24,7 +24,12 @@ namespace CreditFlowAPI.Controllers
             var command = new CreateLoanCommand(
                 request.LoanAmount,
                 request.TermMonths,
-                request.Purpose
+                request.Purpose,
+                request.EmployerName,
+                request.JobTitle,
+                request.YearsEmployed,
+                request.MonthlyIncome,
+                request.MonthlyExpenses
             );
 
             await AuditService.LogAsync(UserId, AuditAction.CreateLoanApplication.ToString(), "User requested CreateLoan");

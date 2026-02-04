@@ -33,7 +33,14 @@ namespace CreditFlowAPI.Controllers
                 UserName = dto.Email, // Στο Identity το UserName είναι συνήθως το Email
                 Email = dto.Email,
                 FirstName = dto.FirstName,
-                LastName = dto.LastName
+                LastName = dto.LastName,
+                TaxId = dto.TaxId,
+                DateOfBirth = dto.DateOfBirth,
+                PhoneNumber = dto.PhoneNumber,
+                Street = dto.Street,
+                City = dto.City,
+                State = dto.State,
+                ZipCode = dto.ZipCode
             };
 
             // 3. Τον αποθηκεύουμε (Το Identity κάνει Hash το password μόνο του!)
