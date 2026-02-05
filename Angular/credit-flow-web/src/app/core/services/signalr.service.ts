@@ -28,7 +28,6 @@ export class SignalRService {
   private connectionPromise: Promise<void> | null = null;
 
   constructor() {
-    // Lazy initialization - don't initialize in constructor
   }
 
   private initializeConnection(): void {
@@ -168,7 +167,6 @@ export class SignalRService {
   private handleNotification(notification: LoanNotification): void {
     this.lastNotification.set(notification);
     const currentNotifications = this.notifications();
-    // Keep only last 50 notifications
     const updatedNotifications = [notification, ...currentNotifications].slice(0, 50);
     this.notifications.set(updatedNotifications);
     

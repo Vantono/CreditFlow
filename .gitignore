@@ -361,3 +361,16 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Angular build output
+wwwroot/browser/
+wwwroot/prerendered-routes.json
+
+# Backup files
+*.bak
+nul
+
+# Environment files (if they contain secrets)
+# Uncomment if your appsettings contain sensitive data
+# appsettings.Development.json
+# appsettings.json
