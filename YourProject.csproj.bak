@@ -1,4 +1,0 @@
-<ItemGroup>
-  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="*"/>
-  <PackageReference Include="Microsoft.OpenApi" Version="*"/>
-</ItemGroup>
