@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/layout/main-layout/main-layout.scss"],
-  "sourcesContent": [".layout-wrapper {\n  display: flex;\n  flex-direction: column;\n  min-height: 100vh;\n}\n\n.layout-content {\n  flex: 1;\n}\n"],
-  "mappings": ";AAAA,CAAA;AACE,WAAA;AACA,kBAAA;AACA,cAAA;;AAGF,CAAA;AACE,QAAA;;",
-  "names": []
-}
