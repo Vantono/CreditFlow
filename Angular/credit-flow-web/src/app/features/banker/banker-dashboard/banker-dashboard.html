@@ -3,9 +3,9 @@
   <div class="page-header">
     <h1 class="page-title">
       <i class="pi pi-briefcase"></i>
-      Banker Dashboard
+      {{ 'bankerDashboard.title' | languagePipe }}
     </h1>
-    <p class="page-subtitle">Review and manage pending loan applications</p>
+    <p class="page-subtitle">{{ 'bankerDashboard.subtitle' | languagePipe }}</p>
   </div>
 
   <!-- Statistics Cards -->
@@ -17,7 +17,7 @@
           <i class="pi pi-clock"></i>
         </div>
         <div class="stat-info">
-          <span class="stat-label">Pending Applications</span>
+          <span class="stat-label">{{ 'bankerDashboard.stats.pending' | languagePipe }}</span>
           <span class="stat-value">{{ store.pendingLoans().length }}</span>
         </div>
       </div>
@@ -30,7 +30,7 @@
           <i class="pi pi-dollar"></i>
         </div>
         <div class="stat-info">
-          <span class="stat-label">Total Volume</span>
+          <span class="stat-label">{{ 'bankerDashboard.stats.totalVolume' | languagePipe }}</span>
           <span class="stat-value">{{ formatCurrency(store.totalPendingAmount()) }}</span>
         </div>
       </div>
@@ -43,7 +43,7 @@
           <i class="pi pi-check-circle"></i>
         </div>
         <div class="stat-info">
-          <span class="stat-label">Low Risk</span>
+          <span class="stat-label">{{ 'bankerDashboard.stats.lowRisk' | languagePipe }}</span>
           <span class="stat-value">{{ store.lowRiskCount() }}</span>
         </div>
       </div>
@@ -56,7 +56,7 @@
           <i class="pi pi-exclamation-triangle"></i>
         </div>
         <div class="stat-info">
-          <span class="stat-label">High Risk</span>
+          <span class="stat-label">{{ 'bankerDashboard.stats.highRisk' | languagePipe }}</span>
           <span class="stat-value">{{ store.highRiskCount() }}</span>
         </div>
       </div>
@@ -79,7 +79,7 @@
         <div class="table-header">
           <h3 class="table-title">
             <i class="pi pi-list"></i>
-            Loan Applications
+            {{ 'bankerDashboard.table.title' | languagePipe }}
           </h3>
           <span class="p-input-icon-left">
             <i class="pi pi-search"></i>
@@ -87,7 +87,7 @@
               pInputText
               type="text"
               (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-              placeholder="Search applications..."
+              [placeholder]="'bankerDashboard.table.searchPlaceholder' | languagePipe"
               class="search-input" />
           </span>
         </div>
@@ -95,13 +95,13 @@
 
       <ng-template #header>
         <tr>
-          <th>Applicant</th>
-          <th>Amount</th>
-          <th>Monthly Payment</th>
-          <th>DTI Ratio</th>
-          <th>Risk Level</th>
-          <th>Submitted</th>
-          <th>Actions</th>
+          <th>{{ 'bankerDashboard.table.header.applicant' | languagePipe }}</th>
+          <th>{{ 'bankerDashboard.table.header.amount' | languagePipe }}</th>
+          <th>{{ 'bankerDashboard.table.header.monthlyPayment' | languagePipe }}</th>
+          <th>{{ 'bankerDashboard.table.header.dtiRatio' | languagePipe }}</th>
+          <th>{{ 'bankerDashboard.table.header.riskLevel' | languagePipe }}</th>
+          <th>{{ 'bankerDashboard.table.header.submitted' | languagePipe }}</th>
+          <th class="center-actions">{{ 'bankerDashboard.table.header.actions' | languagePipe }}</th>
         </tr>
       </ng-template>
 
@@ -123,13 +123,13 @@
           <td>
             <div class="amount-info">
               <span class="amount-value">{{ formatCurrency(loan.amount) }}</span>
-              <span class="amount-term">{{ loan.termMonths }} months @ {{ formatPercent(loan.interestRate) }}</span>
+              <span class="amount-term">{{ loan.termMonths }} {{ 'bankerDashboard.termMonths' | languagePipe }} @ {{ formatPercent(loan.interestRate) }}</span>
             </div>
           </td>
 
           <!-- Monthly Payment -->
           <td>
-            <span class="monthly-payment">{{ formatCurrency(loan.monthlyPayment) }}/mo</span>
+            <span class="monthly-payment">{{ formatCurrency(loan.monthlyPayment) }}{{ 'bankerDashboard.perMonth' | languagePipe }}</span>
           </td>
 
           <!-- DTI Ratio -->
@@ -160,7 +160,7 @@
                 [text]="true"
                 [rounded]="true"
                 severity="info"
-                pTooltip="View Details"
+                [pTooltip]="'bankerDashboard.tooltip.viewDetails' | languagePipe"
                 tooltipPosition="top" />
 
               <p-button
@@ -169,7 +169,7 @@
                 [text]="true"
                 [rounded]="true"
                 severity="success"
-                pTooltip="Approve"
+                [pTooltip]="'bankerDashboard.tooltip.approve' | languagePipe"
                 tooltipPosition="top" />
 
               <p-button
@@ -178,7 +178,7 @@
                 [text]="true"
                 [rounded]="true"
                 severity="danger"
-                pTooltip="Reject"
+                [pTooltip]="'bankerDashboard.tooltip.reject' | languagePipe"
                 tooltipPosition="top" />
             </div>
           </td>
@@ -190,8 +190,8 @@
           <td colspan="7" class="empty-state">
             <div class="empty-content">
               <i class="pi pi-inbox"></i>
-              <h4>No Pending Applications</h4>
-              <p>All loan applications have been reviewed. Great work!</p>
+              <h4>{{ 'bankerDashboard.empty.title' | languagePipe }}</h4>
+              <p>{{ 'bankerDashboard.empty.subtitle' | languagePipe }}</p>
             </div>
           </td>
         </tr>
@@ -202,7 +202,7 @@
   <!-- Loan Details Dialog -->
   <p-dialog
     [(visible)]="showDetailsDialog"
-    [header]="'Loan Application Review'"
+    [header]="'bankerDashboard.dialog.detailsTitle' | languagePipe"
     [modal]="true"
     [style]="{ width: '800px' }"
     [draggable]="false"
@@ -214,28 +214,28 @@
         <div class="review-section">
           <h4 class="section-title">
             <i class="pi pi-user"></i>
-            Applicant Information
+            {{ 'bankerDashboard.section.applicant' | languagePipe }}
           </h4>
           <div class="detail-grid">
             <div class="detail-item">
-              <span class="detail-label">Name:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.name' | languagePipe }}</span>
               <span class="detail-value">{{ loan.applicantName }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Email:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.email' | languagePipe }}</span>
               <span class="detail-value">{{ loan.applicantEmail }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Employer:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.employer' | languagePipe }}</span>
               <span class="detail-value">{{ loan.employerName }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Job Title:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.jobTitle' | languagePipe }}</span>
               <span class="detail-value">{{ loan.jobTitle }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Years Employed:</span>
-              <span class="detail-value">{{ loan.yearsEmployed }} years</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.yearsEmployed' | languagePipe }}</span>
+              <span class="detail-value">{{ loan.yearsEmployed }} {{ 'bankerDashboard.years' | languagePipe }}</span>
             </div>
           </div>
         </div>
@@ -244,19 +244,19 @@
         <div class="review-section">
           <h4 class="section-title">
             <i class="pi pi-chart-line"></i>
-            Financial Information
+            {{ 'bankerDashboard.section.financial' | languagePipe }}
           </h4>
           <div class="detail-grid">
             <div class="detail-item">
-              <span class="detail-label">Monthly Income:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.monthlyIncome' | languagePipe }}</span>
               <span class="detail-value highlight-success">{{ formatCurrency(loan.monthlyIncome) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Monthly Expenses:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.monthlyExpenses' | languagePipe }}</span>
               <span class="detail-value">{{ formatCurrency(loan.monthlyExpenses) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Net Cash Flow:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.netCashFlow' | languagePipe }}</span>
               <span class="detail-value" [class.text-danger]="loan.monthlyIncome - loan.monthlyExpenses - loan.monthlyPayment < 0">
                 {{ formatCurrency(loan.monthlyIncome - loan.monthlyExpenses - loan.monthlyPayment) }}
               </span>
@@ -268,35 +268,35 @@
         <div class="review-section">
           <h4 class="section-title">
             <i class="pi pi-dollar"></i>
-            Loan Details
+            {{ 'bankerDashboard.section.loanDetails' | languagePipe }}
           </h4>
           <div class="detail-grid">
             <div class="detail-item">
-              <span class="detail-label">Requested Amount:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.requestedAmount' | languagePipe }}</span>
               <span class="detail-value highlight-primary">{{ formatCurrency(loan.amount) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Term:</span>
-              <span class="detail-value">{{ loan.termMonths }} months</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.term' | languagePipe }}</span>
+              <span class="detail-value">{{ loan.termMonths }} {{ 'bankerDashboard.termMonths' | languagePipe }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Interest Rate:</span>
-              <span class="detail-value">{{ formatPercent(loan.interestRate) }} APR</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.interestRate' | languagePipe }}</span>
+              <span class="detail-value">{{ formatPercent(loan.interestRate) }} {{ 'bankerDashboard.apr' | languagePipe }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Monthly Payment:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.monthlyPayment' | languagePipe }}</span>
               <span class="detail-value highlight-primary">{{ formatCurrency(loan.monthlyPayment) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Total Interest:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.totalInterest' | languagePipe }}</span>
               <span class="detail-value">{{ formatCurrency(loan.totalInterest) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Total Cost:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.totalCost' | languagePipe }}</span>
               <span class="detail-value font-semibold">{{ formatCurrency(loan.amount + loan.totalInterest) }}</span>
             </div>
             <div class="detail-item full-width">
-              <span class="detail-label">Purpose:</span>
+              <span class="detail-label">{{ 'bankerDashboard.label.purpose' | languagePipe }}</span>
               <p class="detail-description">{{ loan.purpose }}</p>
             </div>
           </div>
@@ -306,20 +306,22 @@
         <div class="review-section risk-section">
           <h4 class="section-title">
             <i class="pi pi-shield"></i>
-            Risk Assessment
+            {{ 'bankerDashboard.section.riskAssessment' | languagePipe }}
           </h4>
           <div class="risk-grid">
             <div class="risk-metric">
-              <span class="metric-label">Debt-to-Income Ratio</span>
+              <span class="metric-label">{{ 'bankerDashboard.risk.dtiRatio' | languagePipe }}</span>
               <span class="metric-value" [class.text-danger]="loan.debtToIncomeRatio > 43">
                 {{ formatPercent(loan.debtToIncomeRatio) }}
               </span>
               <span class="metric-status" [class.text-danger]="loan.debtToIncomeRatio > 43">
-                {{ loan.debtToIncomeRatio > 43 ? 'Above safe threshold (43%)' : 'Within safe range' }}
+                {{ loan.debtToIncomeRatio > 43
+                  ? ('bankerDashboard.risk.aboveThreshold' | languagePipe)
+                  : ('bankerDashboard.risk.withinRange' | languagePipe) }}
               </span>
             </div>
             <div class="risk-metric">
-              <span class="metric-label">Risk Level</span>
+              <span class="metric-label">{{ 'bankerDashboard.risk.riskLevel' | languagePipe }}</span>
               <p-tag
                 [value]="loan.riskLevel"
                 [severity]="getRiskSeverity(loan.riskLevel)"
@@ -333,19 +335,19 @@
     <ng-template #footer>
       <div class="dialog-footer">
         <p-button
-          label="Close"
+          [label]="'bankerDashboard.dialog.close' | languagePipe"
           (onClick)="closeDetailsDialog()"
           severity="secondary"
           [outlined]="true" />
         @if (selectedLoan(); as loan) {
           <p-button
-            label="Reject"
+            [label]="'bankerDashboard.dialog.reject' | languagePipe"
             icon="pi pi-times"
             (onClick)="closeDetailsDialog(); openRejectDialog(loan)"
             severity="danger"
             [outlined]="true" />
           <p-button
-            label="Approve"
+            [label]="'bankerDashboard.dialog.approve' | languagePipe"
             icon="pi pi-check"
             (onClick)="closeDetailsDialog(); openApproveDialog(loan)"
             severity="success" />
@@ -357,7 +359,9 @@
   <!-- Decision Dialog -->
   <p-dialog
     [(visible)]="showDecisionDialog"
-    [header]="decisionType() === 'approve' ? 'Approve Loan Application' : 'Reject Loan Application'"
+    [header]="decisionType() === 'approve'
+      ? ('bankerDashboard.decision.title.approve' | languagePipe)
+      : ('bankerDashboard.decision.title.reject' | languagePipe)"
     [modal]="true"
     [style]="{ width: '500px' }"
     [draggable]="false"
@@ -369,18 +373,18 @@
           @if (decisionType() === 'approve') {
             <div class="approval-message">
               <i class="pi pi-check-circle"></i>
-              <p>You are about to <strong>approve</strong> the loan application for <strong>{{ loan.applicantName }}</strong>.</p>
+              <p>{{ 'bankerDashboard.decision.message.approve' | languagePipe }} <strong>{{ loan.applicantName }}</strong>.</p>
               <ul>
-                <li>Amount: <strong>{{ formatCurrency(loan.amount) }}</strong></li>
-                <li>Monthly Payment: <strong>{{ formatCurrency(loan.monthlyPayment) }}</strong></li>
-                <li>Risk Level: <p-tag [value]="loan.riskLevel" [severity]="getRiskSeverity(loan.riskLevel)" /></li>
+                <li>{{ 'bankerDashboard.decision.label.amount' | languagePipe }} <strong>{{ formatCurrency(loan.amount) }}</strong></li>
+                <li>{{ 'bankerDashboard.decision.label.monthlyPayment' | languagePipe }} <strong>{{ formatCurrency(loan.monthlyPayment) }}</strong></li>
+                <li>{{ 'bankerDashboard.decision.label.riskLevel' | languagePipe }} <p-tag [value]="loan.riskLevel" [severity]="getRiskSeverity(loan.riskLevel)" /></li>
               </ul>
             </div>
           } @else {
             <div class="rejection-message">
               <i class="pi pi-exclamation-triangle"></i>
-              <p>You are about to <strong>reject</strong> the loan application for <strong>{{ loan.applicantName }}</strong>.</p>
-              <p class="warning-text">This action cannot be undone. Please provide a clear explanation.</p>
+              <p>{{ 'bankerDashboard.decision.message.reject' | languagePipe }} <strong>{{ loan.applicantName }}</strong>.</p>
+              <p class="warning-text">{{ 'bankerDashboard.decision.warning.reject' | languagePipe }}</p>
             </div>
           }
         </div>
@@ -389,7 +393,7 @@
           <div class="field">
             <label for="comments" class="field-label">
               <i class="pi pi-comment"></i>
-              Comments (Required)
+              {{ 'bankerDashboard.decision.commentsLabel' | languagePipe }}
             </label>
             <textarea
               id="comments"
@@ -397,10 +401,12 @@
               formControlName="comments"
               rows="5"
               class="w-full"
-              [placeholder]="decisionType() === 'approve' ? 'Provide approval notes and any conditions...' : 'Explain the reason for rejection...'"></textarea>
+              [placeholder]="decisionType() === 'approve'
+                ? ('bankerDashboard.decision.commentsPlaceholderApprove' | languagePipe)
+                : ('bankerDashboard.decision.commentsPlaceholderReject' | languagePipe)"></textarea>
             @if (decisionForm.get('comments')?.dirty && decisionForm.get('comments')?.invalid) {
               <small class="p-error block mt-1">
-                Comments are required (10-500 characters)
+                {{ 'bankerDashboard.decision.commentsError' | languagePipe }}
               </small>
             }
           </div>
@@ -410,12 +416,14 @@
 
     <ng-template #footer>
       <p-button
-        label="Cancel"
+        [label]="'bankerDashboard.decision.cancel' | languagePipe"
         (onClick)="closeDecisionDialog()"
         severity="secondary"
         [outlined]="true" />
       <p-button
-        [label]="decisionType() === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'"
+        [label]="decisionType() === 'approve'
+          ? ('bankerDashboard.decision.confirmApprove' | languagePipe)
+          : ('bankerDashboard.decision.confirmReject' | languagePipe)"
         [icon]="decisionType() === 'approve' ? 'pi pi-check' : 'pi pi-times'"
         (onClick)="submitDecision()"
         [severity]="decisionType() === 'approve' ? 'success' : 'danger'"

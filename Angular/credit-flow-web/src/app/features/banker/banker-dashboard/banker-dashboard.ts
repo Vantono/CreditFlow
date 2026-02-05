@@ -16,6 +16,7 @@ import { Card } from 'primeng/card';
 import { BankerStore } from '../banker.store';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { DecideLoanRequest, LoanStatusText, PendingLoanDto, RiskLevel, RiskSeverity } from '../../../core/models/models';
+import { LanguagePipe } from '../../../core/Language/language.pipe';
 
 @Component({
   selector: 'app-banker-dashboard',
@@ -31,7 +32,8 @@ import { DecideLoanRequest, LoanStatusText, PendingLoanDto, RiskLevel, RiskSever
     Tooltip,
     Dialog,
     Textarea,
-    Card
+    Card,
+    LanguagePipe
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './banker-dashboard.html',

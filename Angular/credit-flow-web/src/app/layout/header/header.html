@@ -3,7 +3,7 @@
     <div class="header-left">
       <div class="brand" (click)="navigateToProfile()">
         <i class="pi pi-credit-card brand-icon"></i>
-        <span class="brand-name">CreditFlow</span>
+        <span class="brand-name">{{ 'header.brand' | languagePipe }}</span>
       </div>
     </div>
     <div class="header-right">
@@ -30,12 +30,17 @@
         <i class="pi pi-user"></i>
         <span class="user-name">{{ authStore.user()?.userName }}</span>
         @if (authStore.isBanker()) {
-        <span class="user-role role-banker">Banker</span>
+        <span class="user-role role-banker">{{ 'header.role.banker' | languagePipe }}</span>
         } @else {
-        <span class="user-role role-customer">Customer</span>
+        <span class="user-role role-customer">{{ 'header.role.customer' | languagePipe }}</span>
         }
       </div>
-      <p-button icon="pi pi-sign-out" label="Logout" (onClick)="logout()" severity="secondary" [outlined]="true"
+      <p-button
+        icon="pi pi-sign-out"
+        [label]="'header.logout' | languagePipe"
+        (onClick)="logout()"
+        severity="secondary"
+        [outlined]="true"
         size="small" />
     </div>
   </div>

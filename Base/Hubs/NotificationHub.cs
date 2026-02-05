@@ -25,6 +25,12 @@ namespace CreditFlowAPI.Base.Hubs
                 _logger.LogInformation($"User {userId} connected with connection ID {Context.ConnectionId}");
             }
 
+            if (Context.User?.IsInRole("Banker") == true)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, "bankers");
+                _logger.LogInformation($"Banker {userId} added to bankers group");
+            }
+
             await base.OnConnectedAsync();
         }
 

@@ -263,9 +263,7 @@ $light-bg: #F9FAFB;
 }
 
 .action-buttons {
-  display: flex;
   gap: 0.5rem;
-  justify-content: center;
 }
 
 // Empty State
@@ -578,3 +576,4 @@ $light-bg: #F9FAFB;
     flex-direction: column;
   }
 }
+

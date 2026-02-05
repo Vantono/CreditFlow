@@ -9,6 +9,7 @@ namespace CreditFlowAPI.Base.Service
     {
         Task SendNotificationToUser(string userId, string type, string title, string message);
         Task SendLoanStatusUpdate(string userId, string loanId, string status, string comments);
+        Task SendBankerNewSubmission(string loanId, string applicantName, decimal amount);
         Task SendEmailNotification(string email, string subject, string body, bool isHtml = false);
         Task SendLoanApprovalEmail(string email, string applicantName, string loanId, decimal amount, decimal monthlyPayment);
         Task SendLoanRejectionEmail(string email, string applicantName, string loanId, string reason);
@@ -72,6 +73,30 @@ namespace CreditFlowAPI.Base.Service
                 status == "Approved" ? "success" : "warn",
                 title,
                 message);
+        }
+
+        public async Task SendBankerNewSubmission(string loanId, string applicantName, decimal amount)
+        {
+            try
+            {
+                await _hubContext.Clients.Group("bankers")
+                    .SendAsync("ReceiveLoanNotification", new
+                    {
+                        Type = "new_loan_submission",
+                        LoanId = loanId,
+                        ApplicantName = applicantName,
+                        Amount = amount,
+                        Title = "📌 New Loan Application",
+                        Message = $"New loan application from {applicantName} for ${amount:N2}",
+                        Timestamp = DateTime.UtcNow
+                    });
+
+                _logger.LogInformation($"Banker notification sent for new loan {loanId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send banker notification for loan {loanId}");
+            }
         }
 
         public async Task SendEmailNotification(string email, string subject, string body, bool isHtml = false)

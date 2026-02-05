@@ -65,6 +65,13 @@ namespace CreditFlowAPI.Feature.Loans.Commands
                     $"Your loan application for ${entity.LoanAmount:N2} has been submitted successfully and is now under review."
                 );
 
+                // Notify bankers about new submission
+                await _notificationService.SendBankerNewSubmission(
+                    entity.Id.ToString(),
+                    $"{applicant.FirstName} {applicant.LastName}",
+                    entity.LoanAmount
+                );
+
                 // Send email confirmation
                 await _notificationService.SendLoanSubmissionConfirmationEmail(
                     applicant.Email ?? string.Empty,

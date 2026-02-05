@@ -5,6 +5,8 @@ import { AuthStore } from '../../core/auth/auth.store';
 import { Language } from '../../core/models/models';
 import { Select } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
+import { LanguagePipe } from '../../core/Language/language.pipe';
+import { LanguageService } from '../../core/Language/language.service';
 
 interface LanguageOption {
   label: string;
@@ -15,13 +17,14 @@ interface LanguageOption {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [ButtonModule, Select, FormsModule],
+  imports: [ButtonModule, Select, FormsModule, LanguagePipe],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
 export class Header {
   private router = inject(Router);
   authStore = inject(AuthStore);
+  private languageService = inject(LanguageService);
 
   selectedLanguage = signal<Language>(Language.English);
 
@@ -40,7 +43,6 @@ export class Header {
 
   onLanguageChange(event: any) {
     this.selectedLanguage.set(event.value);
-    // TODO: Emit or call LanguageService to handle translation changes
-    console.log('Language changed to:', event.value);
+    this.languageService.setLanguage(event.value);
   }
 }
