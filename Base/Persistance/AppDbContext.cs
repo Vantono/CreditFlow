@@ -27,7 +27,6 @@ namespace CreditFlowAPI.Base.Persistance
                 .Property(p => p.RowVersion)
                 .IsConcurrencyToken();
 
-            // Ρύθμιση της σχέσης AuditLog -> User
             modelBuilder.Entity<AuditLog>()
                 .HasOne(log => log.User) 
                 .WithMany()                

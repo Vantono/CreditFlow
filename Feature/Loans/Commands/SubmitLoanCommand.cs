@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CreditFlowAPI.Feature.Loans.Commands
 {
-    public record SubmitLoanCommand(Guid Id) : IRequest; // Δεν επιστρέφει τίποτα, απλά κάνει τη δουλειά
+    public record SubmitLoanCommand(Guid Id) : IRequest;
 
     public class SubmitLoanCommandHandler : IRequestHandler<SubmitLoanCommand>
     {
@@ -52,7 +52,6 @@ namespace CreditFlowAPI.Feature.Loans.Commands
                     throw new KeyNotFoundException($"Applicant not found");
                 }
 
-                // Execute domain logic (Submit sets status to Submitted)
                 entity.Submit();
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -65,14 +64,12 @@ namespace CreditFlowAPI.Feature.Loans.Commands
                     $"Your loan application for ${entity.LoanAmount:N2} has been submitted successfully and is now under review."
                 );
 
-                // Notify bankers about new submission
                 await _notificationService.SendBankerNewSubmission(
                     entity.Id.ToString(),
                     $"{applicant.FirstName} {applicant.LastName}",
                     entity.LoanAmount
                 );
 
-                // Send email confirmation
                 await _notificationService.SendLoanSubmissionConfirmationEmail(
                     applicant.Email ?? string.Empty,
                     $"{applicant.FirstName} {applicant.LastName}",

@@ -23,7 +23,6 @@ namespace CreditFlowAPI.Feature.Loans.Queries
         {
             var userId = _currentUserService.UserId;
 
-            // 1. Ψάχνουμε το δάνειο στη βάση με βάση το ID
             var loan = await _context.LoanApplications
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
@@ -34,16 +33,11 @@ namespace CreditFlowAPI.Feature.Loans.Queries
                 throw new KeyNotFoundException($"Loan with id {request.Id} was not found.");
             }
 
-            // 3. Security Check: Ανήκει στον χρήστη που το ζήτησε;
-            // (Αν θέλεις να μπορεί να το δει και ο Banker, θα χρειαστείς επιπλέον λογική εδώ)
-            // Προς το παρόν το αφήνουμε απλό: Αν δεν είναι δικό του, error.
             if (loan.ApplicantId != userId)
             {
-                // Μπορείς να πετάξεις UnauthorizedAccessException ή απλά να πεις ότι δεν βρέθηκε για ασφάλεια
                 throw new UnauthorizedAccessException("You don't have permission to view this loan.");
             }
 
-            // 4. Mapping σε DTO (Προσοχή στη σειρά των παραμέτρων του Record!)
             return new LoanDto(
                 loan.Id,
                 loan.LoanAmount,
@@ -52,7 +46,7 @@ namespace CreditFlowAPI.Feature.Loans.Queries
                 loan.Status.ToString(),
                 (int)loan.Status,
                 loan.CreatedOnUtc,
-                "Me", // Ή loan.ApplicantId αν θες το ID, καθώς δεν έχουμε ακόμα το Join με το όνομα
+                "Me", 
                 loan.InterestRate,
                 loan.MonthlyPayment,
                 loan.TotalInterest,

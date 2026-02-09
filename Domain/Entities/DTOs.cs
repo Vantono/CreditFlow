@@ -27,7 +27,6 @@ namespace CreditFlowAPI.Domain.Entities
         string UserName
     );
 
-    // 1. Δημιουργία (Create)
     public record CreateLoanRequest(
         [Required][Range(100, 1000000)] decimal LoanAmount,
         [Required][Range(1, 360)] int TermMonths,
@@ -39,28 +38,17 @@ namespace CreditFlowAPI.Domain.Entities
         [Required][Range(0, 1000000)] decimal MonthlyExpenses
     );
 
-    // 2. Υποβολή (Submit)
     public record SubmitLoanRequest(
         [Required] Guid LoanId
     );
 
-    // 3. Λήψη Λεπτομερειών (Get Details)
     public record GetLoanDetailsRequest(
         [Required] Guid LoanId
     );
 
-    // 4. Αρχειοθέτηση/Διαγραφή (Archive)
     public record ArchiveLoanRequest(
         [Required] Guid LoanId,
-        string? Reason // Προαιρετικό
-    );
-
-    // 5. Λήψη Λίστας (Get List - κενό προς το παρόν, αλλά έτοιμο για φίλτρα)
-    public record GetLoansRequest(
-    // Μελλοντικά εδώ θα μπουν φίλτρα:
-    // int PageNumber,
-    // int PageSize,
-    // string? StatusFilter
+        string? Reason 
     );
 
     public record LoanDto(
@@ -84,7 +72,6 @@ namespace CreditFlowAPI.Domain.Entities
     string? Comments
 );
 
-    // Για το ανέβασμα αρχείου (Ειδική περίπτωση με FormFile)
     public record UploadDocumentRequest(
         Guid LoanId,
         IFormFile File

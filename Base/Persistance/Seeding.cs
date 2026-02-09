@@ -9,11 +9,9 @@ namespace CreditFlowAPI.Base.Persistance
         {
             using (var scope = app.Services.CreateScope())
             {
-                // Παίρνουμε τους Managers από το DI Container
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-                // 1. Δημιουργία Ρόλων αν δεν υπάρχουν
                 string[] roleNames = { "Admin", "Banker", "User" };
 
                 foreach (var roleName in roleNames)
@@ -24,7 +22,6 @@ namespace CreditFlowAPI.Base.Persistance
                     }
                 }
 
-                // 2. Δημιουργία του Banker User
                 var bankerEmail = "banker@creditflow.com";
                 var bankerUser = await userManager.FindByEmailAsync(bankerEmail);
 

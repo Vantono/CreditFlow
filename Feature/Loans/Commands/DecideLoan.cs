@@ -14,7 +14,7 @@ namespace CreditFlowAPI.Feature.Loans.Commands
         Guid LoanId,
         DecisionType Decision,
         string Comments,
-        byte[] RowVersion // <--- ΚΡΙΣΙΜΟ: Το token ταυτοχρονίας από το Frontend
+        byte[] RowVersion
     ) : IRequest;
 
     public class DecideLoanCommandHandler : IRequestHandler<DecideLoanCommand>
@@ -40,7 +40,6 @@ namespace CreditFlowAPI.Feature.Loans.Commands
         {
             try
             {
-                // 1. Fetch loan with fresh data
                 var loan = await _context.LoanApplications
                     .FirstOrDefaultAsync(x => x.Id == request.LoanId, cancellationToken);
 
@@ -49,22 +48,18 @@ namespace CreditFlowAPI.Feature.Loans.Commands
                     throw new KeyNotFoundException($"Loan with id {request.LoanId} not found.");
                 }
 
-                // 2. Get applicant details for notifications
                 var applicant = await _userManager.FindByIdAsync(loan.ApplicantId);
                 if (applicant == null)
                 {
                     throw new KeyNotFoundException($"Applicant not found");
                 }
 
-                // 3. Apply decision
                 var isApproved = request.Decision == DecisionType.Approve;
                 loan.Status = isApproved ? LoanStatus.Approved : LoanStatus.Rejected;
                 loan.BankerComments = request.Comments;
 
-                // 4. Save to database
                 await _context.SaveChangesAsync(cancellationToken);
 
-                // 5. Send real-time SignalR notification
                 await _notificationService.SendLoanStatusUpdate(
                     loan.ApplicantId,
                     loan.Id.ToString(),
@@ -72,7 +67,6 @@ namespace CreditFlowAPI.Feature.Loans.Commands
                     request.Comments
                 );
 
-                // 6. Send email notification
                 if (isApproved)
                 {
                     var monthlyPayment = CalculateMonthlyPayment(loan.LoanAmount, loan.TermMonths);
@@ -105,8 +99,6 @@ namespace CreditFlowAPI.Feature.Loans.Commands
 
         private decimal CalculateMonthlyPayment(decimal principal, int termMonths)
         {
-            // Simple calculation: principal / term months (no interest for simplicity)
-            // In production, use the LoanCalculationService
             return Math.Round(principal / termMonths, 2);
         }
     }

@@ -17,12 +17,10 @@ namespace CreditFlowAPI.Base.Middleware
         {
             try
             {
-                // Προσπάθησε να συνεχίσεις την κλήση κανονικά...
                 await _next(httpContext);
             }
             catch (Exception ex)
             {
-                // ...Αν σκάσει οτιδήποτε, έλα εδώ!
                 _logger.LogError($"Something went wrong: {ex}");
                 await HandleExceptionAsync(httpContext, ex);
             }
@@ -32,35 +30,33 @@ namespace CreditFlowAPI.Base.Middleware
         {
             context.Response.ContentType = "application/json";
 
-            // Εδώ αποφασίζουμε τι κωδικό θα δώσουμε ανάλογα με το Exception
             var response = context.Response;
             var message = exception.Message;
 
             switch (exception)
             {
                 case KeyNotFoundException:
-                    response.StatusCode = (int)HttpStatusCode.NotFound; // 404
+                    response.StatusCode = (int)HttpStatusCode.NotFound; 
                     break;
 
                 case UnauthorizedAccessException:
-                    response.StatusCode = (int)HttpStatusCode.Unauthorized; // 401
+                    response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     break;
 
                 case ArgumentException:
-                    response.StatusCode = (int)HttpStatusCode.BadRequest; // 400
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
 
                 default:
-                    response.StatusCode = (int)HttpStatusCode.InternalServerError; // 500
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
                     message = "Internal Server Error from the custom middleware.";
                     break;
             }
 
-            // Φτιάχνουμε το ωραίο JSON
             var errorDetails = new ErrorDetails()
             {
                 StatusCode = response.StatusCode,
-                Message = message // Το μήνυμα που γράψαμε στο throw new Exception("...")
+                Message = message
             };
 
             await context.Response.WriteAsync(errorDetails.ToString());

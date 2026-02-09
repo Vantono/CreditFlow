@@ -38,7 +38,6 @@ namespace CreditFlowAPI.Feature.Loans.Commands
             if (loan == null)
                 throw new KeyNotFoundException($"Loan {request.LoanId} not found");
 
-            // VALIDATION: Don't upload documents after submission
             if (loan.Status != Domain.Enums.LoanStatus.Draft)
             {
                 throw new InvalidOperationException("Cannot upload documents to a submitted loan application");
@@ -53,10 +52,8 @@ namespace CreditFlowAPI.Feature.Loans.Commands
 
             try
             {
-                // Save file to disk
                 var filePath = await _fileService.SaveLoanDocumentAsync(request.File, request.LoanId, cancellationToken);
 
-                // Create database record
                 var document = new LoanDocument
                 {
                     Id = Guid.NewGuid(),

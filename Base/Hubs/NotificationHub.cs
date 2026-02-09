@@ -47,7 +47,6 @@ namespace CreditFlowAPI.Base.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        // Client can send a test message
         public async Task SendTestMessage(string message)
         {
             var userId = Context.User?.FindFirst("sub")?.Value
@@ -64,7 +63,6 @@ namespace CreditFlowAPI.Base.Hubs
             });
         }
 
-        // Send loan status notification to applicant
         public async Task SendLoanNotification(string userId, string loanId, string status, string message, object? additionalData = null)
         {
             try
@@ -91,7 +89,6 @@ namespace CreditFlowAPI.Base.Hubs
             }
         }
 
-        // Broadcast to all bankers about new loan submission
         public async Task NotifyBankerNewSubmission(string loanId, string applicantName, decimal amount)
         {
             try

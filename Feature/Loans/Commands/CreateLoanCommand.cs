@@ -70,43 +70,35 @@ namespace CreditFlowAPI.Feature.Loans.Commands
 
         public async Task<Guid> Handle(CreateLoanCommand request, CancellationToken cancellationToken)
         {
-            // Παίρνουμε το ID του χρήστη από το Token
             var userId = _currentUserService.UserId;
             if (string.IsNullOrEmpty(userId)) throw new UnauthorizedAccessException();
 
-            // Calculate monthly payment
             var monthlyPayment = _loanCalculationService.CalculateMonthlyPayment(
                 request.LoanAmount,
-                8.5m,  // Default rate, will be calculated below
+                8.5m, 
                 request.TermMonths
             );
 
-            // Calculate debt-to-income ratio
             var debtToIncomeRatio = _riskAssessmentService.CalculateDebtToIncomeRatio(
                 monthlyPayment,
                 request.MonthlyIncome
             );
 
-            // Determine risk level
             var riskLevel = _riskAssessmentService.CalculateRiskLevel(debtToIncomeRatio);
 
-            // Determine interest rate based on risk level and employment history
             var interestRate = _riskAssessmentService.DetermineInterestRate(riskLevel, request.YearsEmployed);
 
-            // Recalculate monthly payment with actual interest rate
             monthlyPayment = _loanCalculationService.CalculateMonthlyPayment(
                 request.LoanAmount,
                 interestRate,
                 request.TermMonths
             );
 
-            // Recalculate DTI with actual payment
             debtToIncomeRatio = _riskAssessmentService.CalculateDebtToIncomeRatio(
                 monthlyPayment,
                 request.MonthlyIncome
             );
 
-            // Calculate total interest
             var totalInterest = _loanCalculationService.CalculateTotalInterest(
                 monthlyPayment,
                 request.TermMonths,

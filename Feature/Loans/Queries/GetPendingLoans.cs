@@ -5,7 +5,6 @@ using CreditFlowAPI.Base.Identity;
 
 namespace CreditFlowAPI.Feature.Loans.Queries
 {
-    // DTO: Comprehensive data for banker to review loan applications
     public record PendingLoanDto(
         Guid Id,
         string ApplicantId,
